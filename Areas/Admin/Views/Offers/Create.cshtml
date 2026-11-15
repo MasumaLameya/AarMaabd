@@ -1,0 +1,78 @@
+@model AarMaabd.Models.Offer
+@{
+    ViewData["Title"] = "Create Promotional Offer";
+}
+
+<div class="mb-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="h3 fw-bold mb-1" style="color: var(--brand-rose);">Publish 10% / 20% Offer</h1>
+            <p class="text-muted small mb-0">Create a promotional campaign banner and percentage discount.</p>
+        </div>
+        <a asp-action="Index" class="btn btn-outline-secondary btn-sm rounded-pill">
+            <i class="bi bi-arrow-left me-1"></i> Back to Offers
+        </a>
+    </div>
+</div>
+
+<div class="admin-card" style="max-width: 700px;">
+    <form asp-action="Create" method="post">
+        @Html.AntiForgeryToken()
+
+        <div class="row g-3">
+            <div class="col-12">
+                <label asp-for="Title" class="form-label small fw-bold text-uppercase">Offer Campaign Title *</label>
+                <input asp-for="Title" class="form-control rounded-3" placeholder="e.g. Ramadan Special 20% OFF or Resin Fest 10% OFF" required />
+                <span asp-validation-for="Title" class="text-danger small"></span>
+            </div>
+
+            <div class="col-md-6">
+                <label asp-for="BadgeText" class="form-label small fw-bold text-uppercase">Badge Text *</label>
+                <input asp-for="BadgeText" class="form-control rounded-3" placeholder="e.g. 10% OFF or 20% OFF" required />
+            </div>
+
+            <div class="col-md-6">
+                <label asp-for="DiscountValue" class="form-label small fw-bold text-uppercase">Discount Percentage (%) *</label>
+                <input asp-for="DiscountValue" type="number" min="0" max="100" step="0.01" class="form-control rounded-3" placeholder="e.g. 10 or 20" required />
+                <span asp-validation-for="DiscountValue" class="text-danger small"></span>
+            </div>
+
+            <div class="col-md-6">
+                <label asp-for="TargetCategoryId" class="form-label small fw-bold text-uppercase">Apply to Category (Optional)</label>
+                <select asp-for="TargetCategoryId" class="form-select rounded-3" asp-items="ViewBag.Categories">
+                    <option value="">All Categories (Storewide)</option>
+                </select>
+            </div>
+
+            <div class="col-md-6">
+                <label asp-for="MinOrderAmount" class="form-label small fw-bold text-uppercase">Min Order Amount (৳)</label>
+                <input asp-for="MinOrderAmount" type="number" min="0" step="0.01" class="form-control rounded-3" value="0" />
+                <span asp-validation-for="MinOrderAmount" class="text-danger small"></span>
+            </div>
+
+            <div class="col-md-6">
+                <label asp-for="StartDateUtc" class="form-label small fw-bold text-uppercase">Campaign Start *</label>
+                <input asp-for="StartDateUtc" class="form-control rounded-3" type="date" />
+            </div>
+
+            <div class="col-md-6">
+                <label asp-for="EndDateUtc" class="form-label small fw-bold text-uppercase">Campaign End *</label>
+                <input asp-for="EndDateUtc" class="form-control rounded-3" type="date" />
+            </div>
+
+            <div class="col-12">
+                <div class="form-check mt-2">
+                    <input asp-for="IsActive" class="form-check-input" checked />
+                    <label asp-for="IsActive" class="form-check-label small fw-bold">Live Immediately</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4 pt-3 border-top d-flex gap-2">
+            <button type="submit" class="btn-aarmaabd px-4">
+                <i class="bi bi-check-circle me-1"></i> Publish Campaign
+            </button>
+            <a asp-action="Index" class="btn btn-light rounded-pill px-4">Cancel</a>
+        </div>
+    </form>
+</div>

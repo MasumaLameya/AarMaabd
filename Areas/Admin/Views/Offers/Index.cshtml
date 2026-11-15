@@ -1,0 +1,68 @@
+@model List<AarMaabd.Models.Offer>
+@{
+    ViewData["Title"] = "Manage 10%/20% Offers";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h1 class="h3 fw-bold mb-1" style="color: var(--brand-rose);">Promotional Campaigns (10% / 20% OFF)</h1>
+        <p class="text-muted small mb-0">Create automated promotional offers displayed across the storefront.</p>
+    </div>
+    <a asp-action="Create" class="btn-aarmaabd">
+        <i class="bi bi-plus-circle me-1"></i> New Offer Campaign
+    </a>
+</div>
+
+<div class="admin-card">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light small text-uppercase text-muted">
+                <tr>
+                    <th>Campaign Title</th>
+                    <th>Badge</th>
+                    <th>Discount</th>
+                    <th>Target</th>
+                    <th>Validity Window</th>
+                    <th>Status</th>
+                    <th class="text-end">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var o in Model)
+                {
+                    <tr>
+                        <td>
+                            <strong class="text-dark">@o.Title</strong>
+                        </td>
+                        <td>
+                            <span class="badge bg-danger-subtle text-danger fw-bold">@o.BadgeText</span>
+                        </td>
+                        <td>
+                            <strong>@o.DiscountValue% OFF</strong>
+                        </td>
+                        <td class="small text-muted">
+                            @(o.TargetCategory != null ? o.TargetCategory.Name : "All Store Products")
+                        </td>
+                        <td class="small text-muted">
+                            @o.StartDateUtc.ToLocalTime().ToString("dd MMM") – @o.EndDateUtc.ToLocalTime().ToString("dd MMM yyyy")
+                        </td>
+                        <td>
+                            <span class="badge @(o.IsCurrentlyValid ? "bg-success" : "bg-secondary") rounded-pill">
+                                @(o.IsCurrentlyValid ? "Live in Store" : "Inactive")
+                            </span>
+                        </td>
+                        <td class="text-end">
+                            <form asp-action="ToggleStatus" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@o.Id" />
+                                <button type="submit" class="btn btn-sm @(o.IsActive ? "btn-outline-danger" : "btn-outline-success") rounded-pill">
+                                    @(o.IsActive ? "Deactivate" : "Activate")
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

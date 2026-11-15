@@ -1,0 +1,67 @@
+@model AarMaabd.Models.Order
+@{
+    ViewData["Title"] = "Online Payment Sandbox - AarMaabd";
+}
+
+<div class="container py-5" style="max-width: 620px;">
+    <div class="card border-0 rounded-4 shadow-lg overflow-hidden">
+        <div class="p-4 text-white text-center" style="background: linear-gradient(135deg, #753D51 0%, #A3485E 100%);">
+            <img src="~/images/branding/logo.jpg" alt="AarMaabd Logo" style="width: 54px; height: 54px; border-radius: 50%; border: 2px solid #fff;" class="mb-2" />
+            <h2 class="h4 mb-1">AarMaabd Secure Checkout</h2>
+            <p class="small text-white-50 mb-0">Order Ref: <strong>@Model.OrderNumber</strong></p>
+        </div>
+
+        <div class="card-body p-4 bg-white">
+            <div class="text-center mb-4">
+                <span class="text-muted small text-uppercase">Payable Amount</span>
+                <div class="display-6 fw-bold" style="color: var(--brand-rose);">৳@Model.TotalAmount.ToString("N0")</div>
+            </div>
+
+            <form asp-action="ProcessOnlinePayment" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="orderNumber" value="@Model.OrderNumber" />
+
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-uppercase text-muted">Select Payment Gateway</label>
+                    <div class="row g-2">
+                        <div class="col-4">
+                            <label class="border p-2 rounded-3 text-center d-block cursor-pointer bg-light h-100">
+                                <input type="radio" name="gateway" value="bKash" class="form-check-input d-block mx-auto mb-1" checked />
+                                <strong class="small d-block text-danger">bKash</strong>
+                            </label>
+                        </div>
+                        <div class="col-4">
+                            <label class="border p-2 rounded-3 text-center d-block cursor-pointer bg-light h-100">
+                                <input type="radio" name="gateway" value="Nagad" class="form-check-input d-block mx-auto mb-1" />
+                                <strong class="small d-block text-warning">Nagad</strong>
+                            </label>
+                        </div>
+                        <div class="col-4">
+                            <label class="border p-2 rounded-3 text-center d-block cursor-pointer bg-light h-100">
+                                <input type="radio" name="gateway" value="Visa/Mastercard" class="form-check-input d-block mx-auto mb-1" />
+                                <strong class="small d-block text-primary">Debit/Credit Card</strong>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-uppercase text-muted">Transaction ID / Reference</label>
+                    <input type="text" name="transactionId" class="form-control rounded-3" 
+                           value="BKX@(new Random().Next(10000000, 99999999))" required />
+                    <small class="text-muted">Simulated Bangladesh MFS/Card transaction reference.</small>
+                </div>
+
+                <button type="submit" class="btn-aarmaabd w-100 py-3 fs-6">
+                    <i class="bi bi-shield-check me-1"></i> Verify & Confirm Payment (৳@Model.TotalAmount.ToString("N0"))
+                </button>
+            </form>
+
+            <div class="text-center mt-3">
+                <a href="/Checkout/Confirmation?orderNumber=@Model.OrderNumber" class="text-muted small">
+                    Pay later with Cash on Delivery instead
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

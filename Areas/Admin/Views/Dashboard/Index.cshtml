@@ -1,0 +1,110 @@
+@model List<AarMaabd.Models.Order>
+@{
+    ViewData["Title"] = "Store Dashboard";
+}
+
+<div class="mb-4">
+    <h1 class="h3 fw-bold mb-1" style="color: var(--brand-rose);">Admin Overview</h1>
+    <p class="text-muted small">Live summary of sales, orders, and handmade catalog operations.</p>
+</div>
+
+<!-- Metrics Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+        <div class="admin-card">
+            <div class="text-muted small text-uppercase fw-bold mb-1">Total Sales</div>
+            <div class="admin-stat-num">৳@(((decimal)ViewBag.TotalRevenue).ToString("N0"))</div>
+            <small class="text-muted">Month: ৳@(((decimal)ViewBag.MonthlyRevenue).ToString("N0"))</small>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="admin-card">
+            <div class="text-muted small text-uppercase fw-bold mb-1">Pending Orders</div>
+            <div class="admin-stat-num text-warning">@ViewBag.PendingOrders</div>
+            <small class="text-muted">Total: @ViewBag.TotalOrders orders</small>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="admin-card">
+            <div class="text-muted small text-uppercase fw-bold mb-1">Active Catalog</div>
+            <div class="admin-stat-num">@ViewBag.TotalProducts</div>
+            <small class="text-muted">Low stock: @ViewBag.LowStockCount items</small>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="admin-card">
+            <div class="text-muted small text-uppercase fw-bold mb-1">Custom Requests</div>
+            <div class="admin-stat-num text-info">@ViewBag.PendingCustomOrders</div>
+            <small class="text-muted">Need review/quotation</small>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Orders Table -->
+<div class="admin-card mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="h5 fw-bold mb-0" style="color: var(--brand-rose);">Recent Customer Orders</h3>
+        <a asp-controller="Orders" asp-action="Index" class="btn btn-sm btn-outline-secondary rounded-pill">
+            View All Orders
+        </a>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="text-center py-4 text-muted small">No orders recorded yet.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light small text-uppercase text-muted">
+                    <tr>
+                        <th>Order Ref</th>
+                        <th>Customer</th>
+                        <th>Destination</th>
+                        <th>Payable</th>
+                        <th>Payment</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var order in Model)
+                    {
+                        <tr>
+                            <td>
+                                <strong class="text-dark">@order.OrderNumber</strong>
+                                <small class="d-block text-muted">@order.CreatedAtUtc.ToLocalTime().ToString("dd MMM, hh:mm tt")</small>
+                            </td>
+                            <td>
+                                <div class="fw-semibold">@order.CustomerName</div>
+                                <small class="text-muted">@order.CustomerPhone</small>
+                            </td>
+                            <td class="small">
+                                <span class="badge bg-light text-dark border">@order.DeliveryZone</span>
+                            </td>
+                            <td>
+                                <strong style="color: var(--brand-rose);">৳@order.TotalAmount.ToString("N0")</strong>
+                            </td>
+                            <td>
+                                <span class="badge @(order.PaymentStatus == AarMaabd.Models.PaymentStatus.Paid ? "bg-success-subtle text-success" : "bg-secondary-subtle text-dark") rounded-pill">
+                                    @order.PaymentStatus
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge @(order.Status == AarMaabd.Models.OrderStatus.Delivered ? "bg-success-subtle text-success" : "bg-warning-subtle text-warning-emphasis") rounded-pill">
+                                    @order.Status
+                                </span>
+                            </td>
+                            <td>
+                                <a asp-controller="Orders" asp-action="Details" asp-route-id="@order.Id" class="btn btn-sm btn-outline-secondary rounded-pill">
+                                    Manage
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

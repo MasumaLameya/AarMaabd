@@ -1,0 +1,137 @@
+@model AarMaabd.Models.Product
+@{
+    ViewData["Title"] = "Add New Product";
+}
+
+<div class="mb-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="h3 fw-bold mb-1" style="color: var(--brand-rose);">Add New Product</h1>
+            <p class="text-muted small mb-0">Create a new item in AarMaabd's handmade catalog.</p>
+        </div>
+        <a asp-action="Index" class="btn btn-outline-secondary btn-sm rounded-pill">
+            <i class="bi bi-arrow-left me-1"></i> Back to Catalog
+        </a>
+    </div>
+</div>
+
+<div class="admin-card" style="max-width: 900px;">
+    <form asp-action="Create" method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+
+        <div class="row g-3">
+            <div class="col-md-8">
+                <label asp-for="Name" class="form-label small fw-bold text-uppercase">Product Name *</label>
+                <input asp-for="Name" class="form-control rounded-3" placeholder="e.g. Lavender Crochet Shoulder Bag" required />
+                <span asp-validation-for="Name" class="text-danger small"></span>
+            </div>
+
+            <div class="col-md-4">
+                <label asp-for="SKU" class="form-label small fw-bold text-uppercase">SKU *</label>
+                <input asp-for="SKU" class="form-control rounded-3" placeholder="e.g. CR-BAG-002" required />
+                <span asp-validation-for="SKU" class="text-danger small"></span>
+            </div>
+
+            <div class="col-md-6">
+                <label asp-for="CategoryId" class="form-label small fw-bold text-uppercase">Category *</label>
+                <select asp-for="CategoryId" class="form-select rounded-3" asp-items="ViewBag.CategoryId" required></select>
+            </div>
+
+            <div class="col-md-6">
+                <label asp-for="ProductType" class="form-label small fw-bold text-uppercase">Product Type *</label>
+                <select asp-for="ProductType" class="form-select rounded-3">
+                    <option value="@AarMaabd.Models.ProductType.ReadyStock">Ready Stock (Physical Items)</option>
+                    <option value="@AarMaabd.Models.ProductType.FoodPerishable">Perishable Food (Cakes, Cookies)</option>
+                    <option value="@AarMaabd.Models.ProductType.PreOrder">Pre-Order</option>
+                    <option value="@AarMaabd.Models.ProductType.CustomMade">Custom Made</option>
+                </select>
+            </div>
+
+            <div class="col-md-4">
+                <label asp-for="Price" class="form-label small fw-bold text-uppercase">Regular Price (৳) *</label>
+                <input asp-for="Price" type="number" min="0" step="0.01" class="form-control rounded-3" placeholder="e.g. 1200" required />
+                <span asp-validation-for="Price" class="text-danger small"></span>
+            </div>
+
+            <div class="col-md-4">
+                <label asp-for="SalePrice" class="form-label small fw-bold text-uppercase">Discounted / Sale Price (৳)</label>
+                <input asp-for="SalePrice" type="number" min="0" step="0.01" class="form-control rounded-3" placeholder="e.g. 950" />
+                <span asp-validation-for="SalePrice" class="text-danger small"></span>
+            </div>
+
+            <div class="col-md-4">
+                <label asp-for="StockQuantity" class="form-label small fw-bold text-uppercase">Initial Stock *</label>
+                <input asp-for="StockQuantity" type="number" min="0" step="1" class="form-control rounded-3" value="10" required />
+                <span asp-validation-for="StockQuantity" class="text-danger small"></span>
+            </div>
+
+            <div class="col-12">
+                <label class="form-label small fw-bold text-uppercase">Product Image *</label>
+                <input type="file" name="primaryImage" class="form-control rounded-3" accept=".jpg,.jpeg,.png,.webp" />
+                <small class="text-muted">High resolution JPG or PNG recommended.</small>
+            </div>
+
+            <div class="col-12">
+                <label asp-for="ShortDescription" class="form-label small fw-bold text-uppercase">Short Summary</label>
+                <input asp-for="ShortDescription" class="form-control rounded-3" placeholder="Brief 1-2 sentence description..." />
+            </div>
+
+            <div class="col-12">
+                <label asp-for="Description" class="form-label small fw-bold text-uppercase">Detailed Description *</label>
+                <textarea asp-for="Description" rows="4" class="form-control rounded-3" placeholder="Full handcrafted details, materials, story..." required></textarea>
+            </div>
+
+            <!-- Optional Product Specs -->
+            <div class="col-md-4">
+                <label asp-for="AvailableFlavors" class="form-label small fw-bold text-uppercase">Flavors (Cakes/Food)</label>
+                <input asp-for="AvailableFlavors" class="form-control rounded-3" placeholder="e.g. Vanilla, Chocolate, Red Velvet" />
+            </div>
+
+            <div class="col-md-4">
+                <label asp-for="AvailableSizes" class="form-label small fw-bold text-uppercase">Sizes / Weights</label>
+                <input asp-for="AvailableSizes" class="form-control rounded-3" placeholder="e.g. Small, Medium, Large or 1lb" />
+            </div>
+
+            <div class="col-md-4">
+                <label asp-for="AvailableColors" class="form-label small fw-bold text-uppercase">Colors (Crochet/Resin)</label>
+                <input asp-for="AvailableColors" class="form-control rounded-3" placeholder="e.g. Pink, Ivory, Gold, Lavender" />
+            </div>
+
+            <div class="col-md-6">
+                <label asp-for="Ingredients" class="form-label small fw-bold text-uppercase">Ingredients (Food items)</label>
+                <input asp-for="Ingredients" class="form-control rounded-3" placeholder="Flour, Butter, Sugar, Dairy cream..." />
+            </div>
+
+            <div class="col-md-6">
+                <label asp-for="CareInstructions" class="form-label small fw-bold text-uppercase">Care Instructions</label>
+                <input asp-for="CareInstructions" class="form-control rounded-3" placeholder="Washing guide, heat warning..." />
+            </div>
+
+            <div class="col-12">
+                <div class="d-flex gap-4 pt-2">
+                    <div class="form-check">
+                        <input asp-for="IsFeatured" class="form-check-input" />
+                        <label asp-for="IsFeatured" class="form-check-label small fw-bold">Featured on Homepage</label>
+                    </div>
+                    <div class="form-check">
+                        <input asp-for="IsNewArrival" class="form-check-input" />
+                        <label asp-for="IsNewArrival" class="form-check-label small fw-bold">New Arrival</label>
+                    </div>
+                    <div class="form-check">
+                        <input asp-for="IsBestSeller" class="form-check-input" />
+                        <label asp-for="IsBestSeller" class="form-check-label small fw-bold">Best Seller</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger small p-2 rounded-3 mt-3 mb-3"></div>
+
+        <div class="mt-4 pt-3 border-top d-flex gap-2">
+            <button type="submit" class="btn-aarmaabd px-4">
+                <i class="bi bi-check-circle me-1"></i> Save Product
+            </button>
+            <a asp-action="Index" class="btn btn-light rounded-pill px-4">Cancel</a>
+        </div>
+    </form>
+</div>

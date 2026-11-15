@@ -1,0 +1,239 @@
+@model AarMaabd.ViewModels.HomeViewModel
+@{
+    ViewData["Title"] = "Handmade With Love | Crochet, Bakery, Resin & Gifts";
+}
+
+<!-- 1. Hero Banner Section -->
+<section class="hero-section">
+    <div class="container">
+        @if (Model.HeroBanners.Any())
+        {
+            var hero = Model.HeroBanners.First();
+            <div class="hero-card">
+                <img src="@hero.ImageUrl" alt="@hero.Title" class="hero-img" />
+                <div class="hero-overlay">
+                    <div class="hero-content">
+                        <span class="badge bg-white text-dark px-3 py-2 rounded-pill mb-3 fw-bold shadow-sm" style="color: var(--brand-rose) !important;">
+                            <i class="bi bi-sparkles me-1 text-warning"></i> Handcrafted Lifestyle
+                        </span>
+                        <h1 class="hero-title">@hero.Title</h1>
+                        <p class="hero-subtitle">@hero.Subtitle</p>
+                        <div class="d-flex gap-3 flex-wrap">
+                            <a href="@(hero.TargetUrl ?? "/Shop")" class="btn-aarmaabd">
+                                <span>@(hero.ButtonText ?? "Shop Collection")</span>
+                                <i class="bi bi-arrow-right"></i>
+                            </a>
+                            <a asp-controller="CustomOrders" asp-action="Create" class="btn btn-light rounded-pill px-4 py-2 fw-bold text-dark shadow-sm">
+                                <i class="bi bi-palette me-1"></i> Custom Order
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="hero-card">
+                <img src="~/images/branding/hero.jpg" alt="AarMaabd Collection" class="hero-img" />
+                <div class="hero-overlay">
+                    <div class="hero-content">
+                        <h1 class="hero-title">Welcome to AarMaabd</h1>
+                        <p class="hero-subtitle">Handmade With Love & Curated Lifestyle</p>
+                        <a href="/Shop" class="btn-aarmaabd">Explore Collection</a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</section>
+
+<!-- 2. Explore Our Collections Section (Matching user reference) -->
+<section class="py-4">
+    <div class="container">
+        <div class="section-header">
+            <h2 class="section-title">Explore Our Collections</h2>
+            <p class="section-subtitle">Made and curated with love</p>
+        </div>
+
+        <div class="row g-3 g-md-4 justify-content-center">
+            @foreach (var cat in Model.Categories.Take(6))
+            {
+                <div class="col-4 col-md-4 col-lg-2">
+                    <a href="/Shop?category=@cat.Slug" class="collection-card">
+                        <div class="collection-img-wrap">
+                            <img src="@(string.IsNullOrEmpty(cat.ImageUrl) ? "/images/branding/logo.jpg" : cat.ImageUrl)" 
+                                 alt="@cat.Name" loading="lazy" />
+                        </div>
+                        <h3 class="collection-name">@cat.Name</h3>
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+<!-- 3. Featured Products Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-end mb-4">
+            <div>
+                <h2 class="section-title mb-1">Featured Products</h2>
+                <p class="section-subtitle mb-0">Our most cherished handmade creations</p>
+            </div>
+            <a href="/Shop" class="btn-aarmaabd-outline d-none d-sm-inline-flex">
+                View All <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+
+        <div class="row g-3 g-md-4">
+            @foreach (var product in Model.FeaturedProducts)
+            {
+                <div class="col-6 col-md-4 col-lg-3">
+                    <div class="product-card">
+                        <div class="product-img-wrap">
+                            @if (product.HasDiscount)
+                            {
+                                <div class="product-badges">
+                                    <span class="badge-discount">@product.DiscountPercentage% OFF</span>
+                                </div>
+                            }
+                            <a href="/product/@product.Slug">
+                                <img src="@product.PrimaryImageUrl" alt="@product.Name" loading="lazy" />
+                            </a>
+                            <div class="product-actions-floating">
+                                <button type="button" class="btn-wishlist-float" title="Add to Wishlist">
+                                    <i class="bi bi-heart"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="product-body">
+                            <span class="product-category-label">@(product.Category?.Name ?? "Handmade")</span>
+                            <h3 class="product-title">
+                                <a href="/product/@product.Slug">@product.Name</a>
+                            </h3>
+
+                            <div class="product-price-row">
+                                <span class="product-current-price">৳@product.CurrentEffectivePrice.ToString("N0")</span>
+                                @if (product.HasDiscount)
+                                {
+                                    <span class="product-old-price">৳@product.Price.ToString("N0")</span>
+                                }
+                            </div>
+
+                            <button type="button" class="btn-add-to-cart" onclick="quickAddToCart(@product.Id, this)">
+                                <i class="bi bi-bag-plus"></i> Add to Cart
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="text-center mt-4 d-sm-none">
+            <a href="/Shop" class="btn-aarmaabd-outline w-100">
+                View All Products <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- 4. Special Promotional Offers Strip -->
+<section class="container my-2">
+    <div class="offer-strip">
+        <div class="d-flex align-items-center gap-3">
+            <div class="rounded-circle p-3 d-flex align-items-center justify-content-center" 
+                 style="background-color: #FFFFFF; color: var(--brand-rose); font-size: 1.8rem; width: 60px; height: 60px;">
+                <i class="bi bi-ticket-perforated"></i>
+            </div>
+            <div>
+                <span class="badge bg-white text-danger fw-bold rounded-pill mb-1">LIMITED TIME OFFER</span>
+                <h3 class="mb-1" style="color: var(--brand-rose); font-size: 1.6rem;">Get 10% OFF with code AAR10</h3>
+                <p class="text-muted mb-0" style="font-size: 0.9rem;">Applicable on all handmade crochet & resin collections. Min spend ৳500.</p>
+            </div>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <span class="offer-code-tag" onclick="copyCouponCode('AAR10')" title="Click to copy code">
+                AAR10 <i class="bi bi-copy ms-1 text-muted"></i>
+            </span>
+            <a href="/Shop" class="btn-aarmaabd">Shop Now</a>
+        </div>
+    </div>
+</section>
+
+<!-- 5. Custom Order Callout Section -->
+<section class="py-5" style="background-color: var(--brand-blush-light); border-top: 1px solid var(--border-soft); border-bottom: 1px solid var(--border-soft);">
+    <div class="container">
+        <div class="row align-items-center g-4">
+            <div class="col-lg-6">
+                <span class="text-uppercase fw-bold text-muted small letter-spacing">Personalized For You</span>
+                <h2 class="display-6 fw-bold my-2" style="color: var(--brand-rose);">Custom Handcrafted Gifts & Bento Cakes</h2>
+                <p class="text-muted mb-4">
+                    Looking for a customized crochet tote with your favorite floral colors? Or an alphabet resin keychain with gold flakes? Or a custom message strawberry cake? Send us your preferences and we'll craft it especially for you.
+                </p>
+                <div class="d-flex gap-3 flex-wrap">
+                    <a asp-controller="CustomOrders" asp-action="Create" class="btn-aarmaabd">
+                        <i class="bi bi-pencil-square"></i> Request Custom Order
+                    </a>
+                    <a href="https://wa.me/8801700000000" target="_blank" class="btn btn-outline-success rounded-pill px-4 py-2 fw-semibold">
+                        <i class="bi bi-whatsapp me-1"></i> Chat on WhatsApp
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="row g-3">
+                    <div class="col-6">
+                        <img src="~/images/products/crochet-bag.jpg" alt="Custom Crochet" class="img-fluid rounded-4 shadow-sm" />
+                    </div>
+                    <div class="col-6">
+                        <img src="~/images/products/pink-cake.jpg" alt="Custom Cake" class="img-fluid rounded-4 shadow-sm mb-3" />
+                        <img src="~/images/products/resin-keychain.jpg" alt="Custom Resin" class="img-fluid rounded-4 shadow-sm" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 6. New Arrivals Section -->
+@if (Model.NewArrivals.Any())
+{
+    <section class="py-5">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">New Arrivals</h2>
+                <p class="section-subtitle">Freshly crafted additions to our lifestyle catalog</p>
+            </div>
+
+            <div class="row g-3 g-md-4">
+                @foreach (var product in Model.NewArrivals)
+                {
+                    <div class="col-6 col-md-4 col-lg-3">
+                        <div class="product-card">
+                            <div class="product-img-wrap">
+                                <span class="badge bg-white text-dark position-absolute top-0 start-0 m-2 rounded-pill px-2 py-1 small shadow-sm fw-bold">
+                                    NEW
+                                </span>
+                                <a href="/product/@product.Slug">
+                                    <img src="@product.PrimaryImageUrl" alt="@product.Name" loading="lazy" />
+                                </a>
+                            </div>
+                            <div class="product-body">
+                                <span class="product-category-label">@(product.Category?.Name ?? "Handmade")</span>
+                                <h3 class="product-title">
+                                    <a href="/product/@product.Slug">@product.Name</a>
+                                </h3>
+                                <div class="product-price-row">
+                                    <span class="product-current-price">৳@product.CurrentEffectivePrice.ToString("N0")</span>
+                                </div>
+                                <button type="button" class="btn-add-to-cart" onclick="quickAddToCart(@product.Id, this)">
+                                    <i class="bi bi-bag-plus"></i> Add to Cart
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+}

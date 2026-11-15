@@ -1,0 +1,257 @@
+@model AarMaabd.ViewModels.CartSummaryViewModel
+@{
+    ViewData["Title"] = "Your Shopping Cart";
+}
+
+<div class="container py-4">
+    <h1 class="h2 mb-4" style="color: var(--brand-rose);"><i class="bi bi-bag-heart me-2"></i> Your Shopping Bag</h1>
+
+    @if (!Model.Items.Any())
+    {
+        <div class="p-5 text-center bg-white rounded-4 border shadow-sm my-4">
+            <div class="fs-1 text-muted mb-3"><i class="bi bi-bag-x"></i></div>
+            <h3 style="color: var(--brand-rose);">Your shopping cart is currently empty</h3>
+            <p class="text-muted">Explore our curated collections of handmade crochet, delicious cakes, and resin gifts!</p>
+            <a href="/Shop" class="btn-aarmaabd mt-3">Start Shopping</a>
+        </div>
+    }
+    else
+    {
+        <!-- Free Delivery Progress Bar -->
+        <div class="p-3 mb-4 rounded-4 border bg-white shadow-sm">
+            @if (Model.IsEligibleForFreeDelivery)
+            {
+                <div class="d-flex align-items-center gap-2 text-success fw-bold small">
+                    <i class="bi bi-check-circle-fill fs-5"></i>
+                    <span>Congratulations! Your order qualifies for <strong>FREE Delivery</strong> across Bangladesh! 🎉</span>
+                </div>
+            }
+            else
+            {
+                var remaining = 2500.00m - Model.SubTotal;
+                var progressPercent = Math.Min(100, (int)((Model.SubTotal / 2500.00m) * 100));
+                <div class="d-flex justify-content-between align-items-center mb-1 small">
+                    <span class="text-muted">Add <strong>৳@remaining.ToString("N0")</strong> more to get <strong>FREE Delivery</strong>!</span>
+                    <span class="fw-bold" style="color: var(--brand-rose);">@progressPercent%</span>
+                </div>
+                <div class="progress rounded-pill" style="height: 8px;">
+                    <div class="progress-bar" role="progressbar" style="width: @progressPercent%; background-color: var(--brand-rose);" aria-valuenow="@progressPercent" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+            }
+        </div>
+
+        <div class="row g-4">
+            <!-- Left: Cart Items -->
+            <div class="col-lg-8">
+                <div class="bg-white rounded-4 border shadow-sm overflow-hidden">
+                    <div class="p-3 border-bottom d-none d-md-flex text-muted small fw-bold text-uppercase">
+                        <div style="flex: 2;">Product</div>
+                        <div style="flex: 1;" class="text-center">Price</div>
+                        <div style="flex: 1;" class="text-center">Quantity</div>
+                        <div style="flex: 1;" class="text-end">Total</div>
+                    </div>
+
+                    @foreach (var item in Model.Items)
+                    {
+                        <div class="p-3 border-bottom d-flex flex-column flex-md-row align-items-start align-items-md-center gap-3">
+                            <!-- Image & Details -->
+                            <div class="d-flex align-items-center gap-3" style="flex: 2;">
+                                <img src="@item.ImageUrl" alt="@item.ProductName" class="rounded-3 border" style="width: 72px; height: 72px; object-fit: cover;" />
+                                <div>
+                                    <h4 class="h6 mb-1">
+                                        <a href="/product/@item.ProductSlug" class="text-dark">@item.ProductName</a>
+                                    </h4>
+                                    @if (!string.IsNullOrEmpty(item.VariantName))
+                                    {
+                                        <span class="badge bg-light text-muted border me-1 small">@item.VariantName</span>
+                                    }
+                                    @if (!string.IsNullOrEmpty(item.CustomizationNote))
+                                    {
+                                        <small class="text-muted d-block italic"><i class="bi bi-pencil-fill me-1"></i> "@item.CustomizationNote"</small>
+                                    }
+                                    <form asp-action="RemoveItem" method="post" class="mt-2">
+                                        <input type="hidden" name="id" value="@item.Id" />
+                                        <button type="submit" class="btn btn-link text-danger p-0 small text-decoration-none">
+                                            <i class="bi bi-trash3 me-1"></i> Remove
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <!-- Unit Price -->
+                            <div class="text-md-center" style="flex: 1;">
+                                <span class="d-md-none text-muted small me-2">Unit Price:</span>
+                                <span class="fw-bold">৳@item.UnitPrice.ToString("N0")</span>
+                            </div>
+
+                            <!-- Quantity Adjuster -->
+                            <div class="text-md-center" style="flex: 1;">
+                                <div class="d-inline-flex align-items-center border rounded-pill px-2 py-1 bg-light">
+                                    <button type="button" class="btn btn-sm btn-link text-dark p-0 text-decoration-none" onclick="updateItemQuantity(@item.Id, @item.Quantity - 1)">
+                                        <i class="bi bi-dash"></i>
+                                    </button>
+                                    <span class="mx-2 fw-bold" style="min-width: 20px; text-align: center;">@item.Quantity</span>
+                                    <button type="button" class="btn btn-sm btn-link text-dark p-0 text-decoration-none" onclick="updateItemQuantity(@item.Id, @item.Quantity + 1)">
+                                        <i class="bi bi-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Line Total -->
+                            <div class="text-md-end w-100 w-md-auto" style="flex: 1;">
+                                <span class="d-md-none text-muted small me-2">Subtotal:</span>
+                                <span class="fw-bold fs-6" style="color: var(--brand-rose);">৳@item.LineTotal.ToString("N0")</span>
+                            </div>
+                        </div>
+                    }
+
+                    <div class="p-3 d-flex justify-content-between align-items-center bg-light">
+                        <a href="/Shop" class="btn btn-link text-muted text-decoration-none small">
+                            <i class="bi bi-arrow-left me-1"></i> Continue Shopping
+                        </a>
+                        <span class="small text-muted">@Model.TotalItemsCount item(s) in bag</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Order Summary & Coupon -->
+            <div class="col-lg-4">
+                <div class="p-4 bg-white rounded-4 border shadow-sm">
+                    <h3 class="h5 fw-bold mb-3 pb-2 border-bottom" style="color: var(--brand-rose);">Order Summary</h3>
+
+                    <!-- Coupon Code Input -->
+                    <div class="mb-3">
+                        <label for="couponInput" class="form-label small fw-bold text-uppercase text-muted">Apply Promo Code</label>
+                        <div class="input-group">
+                            <input type="text" id="couponInput" class="form-control rounded-start-pill" 
+                                   placeholder="e.g. AAR10" value="@Model.AppliedCouponCode" />
+                            <button type="button" class="btn-aarmaabd rounded-end-pill px-3" onclick="handleApplyCoupon()">
+                                Apply
+                            </button>
+                        </div>
+                        @if (!string.IsNullOrEmpty(Model.AppliedCouponCode))
+                        {
+                            <div class="mt-2 d-flex justify-content-between align-items-center bg-success-subtle p-2 rounded-3 text-success small">
+                                <span><i class="bi bi-tag-fill me-1"></i> Code <strong>@Model.AppliedCouponCode</strong> applied</span>
+                                <button type="button" class="btn btn-link text-danger p-0 small text-decoration-none" onclick="handleRemoveCoupon()">
+                                    Remove
+                                </button>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Delivery Zone Info -->
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-uppercase text-muted">Delivery Destination</label>
+                        <div class="p-3 border rounded-3 d-flex justify-content-between align-items-center" style="background-color: var(--surface-alt);">
+                            <div>
+                                <span class="fw-bold text-dark"><i class="bi bi-geo-alt-fill me-1" style="color: var(--brand-rose);"></i> Inside Dhaka City</span>
+                                <small class="d-block text-muted">Delivery within 24–48 hours</small>
+                            </div>
+                            <span class="fw-bold" style="color: var(--brand-rose);">৳70</span>
+                        </div>
+                        <small class="text-muted d-block mt-1" style="font-size: 0.75rem;">
+                            <i class="bi bi-info-circle me-1"></i> Delivery service is exclusively available within Dhaka.
+                        </small>
+                    </div>
+
+                    <!-- Financial Breakdown -->
+                    <div class="d-flex justify-content-between py-1 text-muted small">
+                        <span>Items Subtotal:</span>
+                        <span class="text-dark fw-semibold">৳@Model.SubTotal.ToString("N0")</span>
+                    </div>
+
+                    @if (Model.CouponDiscount > 0)
+                    {
+                        <div class="d-flex justify-content-between py-1 text-success small">
+                            <span>Coupon Savings:</span>
+                            <span class="fw-bold">-৳@Model.CouponDiscount.ToString("N0")</span>
+                        </div>
+                    }
+
+                    <div class="d-flex justify-content-between py-1 text-muted small">
+                        <span>Delivery Fee (@Model.DeliveryZone):</span>
+                        <span class="text-dark fw-semibold">
+                            @(Model.EstimatedDeliveryFee == 0 ? "FREE" : $"৳{Model.EstimatedDeliveryFee:N0}")
+                        </span>
+                    </div>
+
+                    <hr class="my-3" />
+
+                    <div class="d-flex justify-content-between align-items-baseline mb-4">
+                        <span class="fs-5 fw-bold" style="color: var(--brand-rose);">Estimated Total:</span>
+                        <span class="fs-3 fw-bold" style="color: var(--brand-rose);">৳@Model.GrandTotal.ToString("N0")</span>
+                    </div>
+
+                    <!-- Checkout Button -->
+                    <a href="/Checkout?deliveryZone=@Uri.EscapeDataString(Model.DeliveryZone)" class="btn-aarmaabd w-100 py-3 fs-6">
+                        Proceed to Checkout <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
+
+                    <div class="text-center mt-3 small text-muted">
+                        <i class="bi bi-shield-lock me-1"></i> Safe & Secure Checkout
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        async function updateItemQuantity(cartItemId, newQty) {
+            try {
+                const response = await fetch('/Cart/UpdateQuantity', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cartItemId: cartItemId, quantity: newQty })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    window.location.reload();
+                } else {
+                    showToast(result.message, true);
+                }
+            } catch (e) {
+                showToast('Failed to update quantity', true);
+            }
+        }
+
+        async function handleApplyCoupon() {
+            const code = document.getElementById('couponInput').value.trim();
+            if (!code) {
+                showToast('Please type a coupon code', true);
+                return;
+            }
+
+            try {
+                const response = await fetch('/Cart/ApplyCoupon', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ couponCode: code })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showToast(result.message);
+                    setTimeout(() => window.location.reload(), 800);
+                } else {
+                    showToast(result.message, true);
+                }
+            } catch (e) {
+                showToast('Error applying coupon', true);
+            }
+        }
+
+        async function handleRemoveCoupon() {
+            try {
+                const response = await fetch('/Cart/RemoveCoupon', { method: 'POST' });
+                const result = await response.json();
+                if (result.success) {
+                    window.location.reload();
+                }
+            } catch (e) {
+                showToast('Error removing coupon', true);
+            }
+        }
+    </script>
+}

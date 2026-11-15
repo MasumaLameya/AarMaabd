@@ -1,0 +1,182 @@
+@model AarMaabd.ViewModels.CustomerDashboardViewModel
+@{
+    ViewData["Title"] = "Customer Dashboard";
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom flex-wrap gap-2">
+        <div>
+            <h1 class="h2 mb-1" style="color: var(--brand-rose);">Hello, @Model.User.FullName!</h1>
+            <p class="text-muted small mb-0">Member since @Model.User.CreatedAtUtc.ToString("MMMM yyyy") | @Model.User.PhoneNumber</p>
+        </div>
+        <form asp-action="Logout" method="post">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3">
+                <i class="bi bi-box-arrow-right me-1"></i> Sign Out
+            </button>
+        </form>
+    </div>
+
+    <!-- Quick Metrics -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="p-3 bg-white rounded-4 border shadow-sm d-flex align-items-center gap-3">
+                <div class="rounded-circle p-3 d-flex align-items-center justify-content-center" style="background-color: var(--brand-blush); color: var(--brand-rose); width: 50px; height: 50px; font-size: 1.5rem;">
+                    <i class="bi bi-bag-check"></i>
+                </div>
+                <div>
+                    <span class="text-muted small">Total Orders</span>
+                    <h3 class="mb-0 fw-bold" style="color: var(--brand-rose);">@Model.TotalOrdersCount</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="p-3 bg-white rounded-4 border shadow-sm d-flex align-items-center gap-3">
+                <div class="rounded-circle p-3 d-flex align-items-center justify-content-center" style="background-color: #EBF7EE; color: #1E6B38; width: 50px; height: 50px; font-size: 1.5rem;">
+                    <i class="bi bi-cash-stack"></i>
+                </div>
+                <div>
+                    <span class="text-muted small">Total Spent</span>
+                    <h3 class="mb-0 fw-bold" style="color: #1E6B38;">৳@Model.TotalSpent.ToString("N0")</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="p-3 bg-white rounded-4 border shadow-sm d-flex align-items-center gap-3">
+                <div class="rounded-circle p-3 d-flex align-items-center justify-content-center" style="background-color: #FFF3CD; color: #856404; width: 50px; height: 50px; font-size: 1.5rem;">
+                    <i class="bi bi-palette"></i>
+                </div>
+                <div>
+                    <span class="text-muted small">Custom Requests</span>
+                    <h3 class="mb-0 fw-bold" style="color: #856404;">@Model.CustomOrders.Count</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Orders Tab & Custom Orders -->
+    <div class="row g-4">
+        <!-- Order History -->
+        <div class="col-lg-8">
+            <div class="p-4 bg-white rounded-4 border shadow-sm mb-4">
+                <h3 class="h5 fw-bold mb-3 pb-2 border-bottom" style="color: var(--brand-rose);">
+                    <i class="bi bi-clock-history me-2"></i> Order History
+                </h3>
+
+                @if (!Model.RecentOrders.Any())
+                {
+                    <div class="text-center py-4 text-muted">
+                        <i class="bi bi-bag-x fs-1 mb-2 d-block"></i>
+                        You haven't placed any orders yet.
+                        <div class="mt-2">
+                            <a href="/Shop" class="btn-aarmaabd btn-sm">Explore Shop</a>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table align-middle">
+                            <thead class="table-light small text-uppercase text-muted">
+                                <tr>
+                                    <th>Order #</th>
+                                    <th>Date</th>
+                                    <th>Items</th>
+                                    <th>Total</th>
+                                    <th>Status</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var order in Model.RecentOrders)
+                                {
+                                    <tr>
+                                        <td>
+                                            <strong class="text-dark">@order.OrderNumber</strong>
+                                        </td>
+                                        <td class="small text-muted">
+                                            @order.CreatedAtUtc.ToLocalTime().ToString("dd MMM yyyy")
+                                        </td>
+                                        <td class="small">
+                                            @order.Items.Count item(s)
+                                        </td>
+                                        <td>
+                                            <strong style="color: var(--brand-rose);">৳@order.TotalAmount.ToString("N0")</strong>
+                                        </td>
+                                        <td>
+                                            <span class="badge @(order.Status == AarMaabd.Models.OrderStatus.Delivered ? "bg-success-subtle text-success" : "bg-warning-subtle text-warning-emphasis") rounded-pill px-2 py-1">
+                                                @order.Status
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <a asp-action="OrderDetails" asp-route-orderNumber="@order.OrderNumber" class="btn btn-sm btn-outline-secondary rounded-pill">
+                                                View Receipt
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+
+            <!-- Custom Order Requests -->
+            @if (Model.CustomOrders.Any())
+            {
+                <div class="p-4 bg-white rounded-4 border shadow-sm">
+                    <h3 class="h5 fw-bold mb-3 pb-2 border-bottom" style="color: var(--brand-rose);">
+                        <i class="bi bi-palette me-2"></i> Custom Handcrafted Requests
+                    </h3>
+                    <div class="d-flex flex-column gap-3">
+                        @foreach (var custom in Model.CustomOrders)
+                        {
+                            <div class="p-3 border rounded-3 bg-light">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <strong>@custom.Category Request #@custom.Id</strong>
+                                    <span class="badge bg-primary-subtle text-primary rounded-pill">@custom.Status</span>
+                                </div>
+                                <p class="text-muted small mb-2">@custom.Description</p>
+                                @if (custom.QuotedPrice.HasValue)
+                                {
+                                    <div class="fw-bold text-success small">
+                                        Quoted Price: ৳@custom.QuotedPrice.Value.ToString("N0")
+                                    </div>
+                                }
+                                @if (!string.IsNullOrEmpty(custom.AdminNotes))
+                                {
+                                    <div class="small text-muted mt-1">
+                                        <strong>Admin Note:</strong> @custom.AdminNotes
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Right: Saved Delivery Address -->
+        <div class="col-lg-4">
+            <div class="p-4 bg-white rounded-4 border shadow-sm">
+                <h3 class="h5 fw-bold mb-3 pb-2 border-bottom" style="color: var(--brand-rose);">
+                    <i class="bi bi-geo-alt me-2"></i> Default Address
+                </h3>
+                <div class="small text-muted mb-3">
+                    <strong>@Model.User.FullName</strong><br />
+                    <span>@Model.User.StreetAddress</span><br />
+                    <span>@(string.IsNullOrEmpty(Model.User.UpazilaThana) ? "" : $"{Model.User.UpazilaThana}, ") @Model.User.District, @Model.User.Division</span><br />
+                    <span>Phone: @Model.User.PhoneNumber</span>
+                </div>
+                <a asp-controller="CustomOrders" asp-action="Create" class="btn-aarmaabd w-100 btn-sm mb-2">
+                    <i class="bi bi-pencil-square me-1"></i> New Custom Request
+                </a>
+                <a href="/OrderTracking" class="btn btn-outline-secondary w-100 btn-sm rounded-pill">
+                    <i class="bi bi-search me-1"></i> Track Any Order
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

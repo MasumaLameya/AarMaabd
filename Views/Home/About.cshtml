@@ -1,0 +1,51 @@
+@{
+    ViewData["Title"] = "About AarMaabd - Handcrafted With Love";
+}
+
+<div class="container py-5" style="max-width: 840px;">
+    <div class="text-center mb-5">
+        <img src="~/images/branding/logo.jpg" alt="AarMaabd Logo" class="brand-logo-img mx-auto mb-3" style="width: 80px; height: 80px;" />
+        <h1 class="display-5 fw-bold" style="color: var(--brand-rose);">About AarMaabd</h1>
+        <p class="text-muted fs-5">Handcrafted Lifestyle, Curated with Passion in Bangladesh</p>
+    </div>
+
+    <div class="p-4 p-md-5 bg-white rounded-4 border shadow-sm mb-4">
+        <h2 class="h4 fw-bold mb-3" style="color: var(--brand-rose);">Our Story</h2>
+        <p class="text-muted leading-relaxed">
+            AarMaabd was born out of a deep love for handcrafted artistry, timeless aesthetics, and delicious homemade flavors. What started as small passion projects—knitting intricate floral crochet bags, pouring crystal resin art keychains, and baking melt-in-the-mouth Korean bento cakes—has blossomed into a curated lifestyle store dedicated to bringing warmth, charm, and authentic artisan craftsmanship into everyday lives.
+        </p>
+
+        <h2 class="h4 fw-bold mt-4 mb-3" style="color: var(--brand-rose);">What We Create</h2>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="p-3 bg-light rounded-3">
+                    <h5 class="h6 fw-bold mb-1" style="color: var(--brand-rose);"><i class="bi bi-bag-heart me-1"></i> Handcrafted Crochet</h5>
+                    <p class="small text-muted mb-0">Floral bags, cute keyrings, wearable knitwear, and home accessories hand-stitched with premium cotton yarns.</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="p-3 bg-light rounded-3">
+                    <h5 class="h6 fw-bold mb-1" style="color: var(--brand-rose);"><i class="bi bi-cake2 me-1"></i> Artisan Bakery & Savories</h5>
+                    <p class="small text-muted mb-0">Freshly baked bento cakes, red velvet cupcakes, cookies, pancakes, and savory treats prepared on demand.</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="p-3 bg-light rounded-3">
+                    <h5 class="h6 fw-bold mb-1" style="color: var(--brand-rose);"><i class="bi bi-gem me-1"></i> Crystal Resin Art</h5>
+                    <p class="small text-muted mb-0">Custom alphabet initial keychains, dried floral botanical pendants, luxury coasters, and jewelry.</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="p-3 bg-light rounded-3">
+                    <h5 class="h6 fw-bold mb-1" style="color: var(--brand-rose);"><i class="bi bi-lamp me-1"></i> Gypsum & Home Decor</h5>
+                    <p class="small text-muted mb-0">Artisanal ribbed gypsum vanity trays, pastel bubble candles, and aesthetic lifestyle accents.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mt-5 pt-3 border-top">
+            <a href="/Shop" class="btn-aarmaabd">Explore Our Catalog</a>
+            <a asp-controller="CustomOrders" asp-action="Create" class="btn-aarmaabd-outline ms-2">Request Custom Piece</a>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,78 @@
+@model List<AarMaabd.Models.Coupon>
+@{
+    ViewData["Title"] = "Manage Promo Coupons";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h1 class="h3 fw-bold mb-1" style="color: var(--brand-rose);">Coupon Codes</h1>
+        <p class="text-muted small mb-0">Create and monitor customer discount codes with usage limits.</p>
+    </div>
+    <a asp-action="Create" class="btn-aarmaabd">
+        <i class="bi bi-plus-circle me-1"></i> Create Coupon
+    </a>
+</div>
+
+<div class="admin-card">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light small text-uppercase text-muted">
+                <tr>
+                    <th>Code</th>
+                    <th>Discount</th>
+                    <th>Min Spend</th>
+                    <th>Max Cap</th>
+                    <th>Usage Count</th>
+                    <th>Validity</th>
+                    <th>Status</th>
+                    <th class="text-end">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var c in Model)
+                {
+                    <tr>
+                        <td>
+                            <strong class="font-monospace fs-6" style="color: var(--brand-rose);">@c.Code</strong>
+                            <small class="text-muted d-block">@c.Description</small>
+                        </td>
+                        <td>
+                            @if (c.DiscountType == AarMaabd.Models.DiscountType.Percentage)
+                            {
+                                <span class="badge bg-danger-subtle text-danger fw-bold">@c.DiscountValue% OFF</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success-subtle text-success fw-bold">৳@c.DiscountValue.ToString("N0") OFF</span>
+                            }
+                        </td>
+                        <td class="small">৳@c.MinSpendAmount.ToString("N0")</td>
+                        <td class="small">@(c.MaxDiscountCap.HasValue ? $"৳{c.MaxDiscountCap.Value:N0}" : "No cap")</td>
+                        <td>
+                            <span class="badge bg-light text-dark border">
+                                @c.UsageCountTotal / @(c.UsageLimitTotal.HasValue ? c.UsageLimitTotal.Value.ToString() : "∞")
+                            </span>
+                        </td>
+                        <td class="small text-muted">
+                            @c.StartDateUtc.ToLocalTime().ToString("dd MMM") – @c.EndDateUtc.ToLocalTime().ToString("dd MMM yyyy")
+                        </td>
+                        <td>
+                            <span class="badge @(c.IsCurrentlyValid ? "bg-success" : "bg-secondary") rounded-pill">
+                                @(c.IsCurrentlyValid ? "Active" : "Inactive")
+                            </span>
+                        </td>
+                        <td class="text-end">
+                            <form asp-action="ToggleStatus" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@c.Id" />
+                                <button type="submit" class="btn btn-sm @(c.IsActive ? "btn-outline-danger" : "btn-outline-success") rounded-pill">
+                                    @(c.IsActive ? "Disable" : "Enable")
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

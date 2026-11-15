@@ -1,0 +1,55 @@
+@model AarMaabd.ViewModels.OrderTrackingRequestViewModel
+@{
+    ViewData["Title"] = "Track Your Order - AarMaabd";
+}
+
+<div class="container py-5" style="max-width: 520px;">
+    <div class="p-4 p-md-5 bg-white rounded-4 border shadow-sm">
+        <div class="text-center mb-4">
+            <div class="rounded-circle d-inline-flex align-items-center justify-content-center p-3 mb-2" 
+                 style="background-color: var(--brand-blush); color: var(--brand-rose); width: 60px; height: 60px; font-size: 1.6rem;">
+                <i class="bi bi-geo-alt-fill"></i>
+            </div>
+            <h1 class="h3 fw-bold" style="color: var(--brand-rose);">Track Order Status</h1>
+            <p class="text-muted small">Enter your Order Number and Mobile Number to check real-time progress</p>
+        </div>
+
+        @if (ViewBag.ErrorMessage != null)
+        {
+            <div class="alert alert-danger small p-3 rounded-3 mb-4">
+                <i class="bi bi-exclamation-triangle-fill me-1"></i> @ViewBag.ErrorMessage
+            </div>
+        }
+
+        <form asp-action="Track" method="post">
+            @Html.AntiForgeryToken()
+
+            <div class="mb-3">
+                <label asp-for="OrderNumber" class="form-label small fw-bold text-uppercase">Order Number *</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light"><i class="bi bi-hash"></i></span>
+                    <input asp-for="OrderNumber" class="form-control rounded-end-3" placeholder="e.g. AAR-20261021-1234" required />
+                </div>
+                <span asp-validation-for="OrderNumber" class="text-danger small"></span>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="CustomerPhone" class="form-label small fw-bold text-uppercase">Mobile Number *</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light"><i class="bi bi-phone"></i></span>
+                    <input asp-for="CustomerPhone" class="form-control rounded-end-3" placeholder="Phone used at checkout" required />
+                </div>
+                <span asp-validation-for="CustomerPhone" class="text-danger small"></span>
+            </div>
+
+            <button type="submit" class="btn-aarmaabd w-100 py-3 fs-6">
+                <i class="bi bi-search me-1"></i> Check Order Status
+            </button>
+        </form>
+
+        <div class="text-center mt-4 pt-3 border-top small text-muted">
+            Have questions about your order? 
+            <a href="https://wa.me/8801700000000" target="_blank" class="fw-bold" style="color: var(--brand-rose);">Chat with us on WhatsApp</a>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,67 @@
+@model AarMaabd.ViewModels.LoginViewModel
+@{
+    ViewData["Title"] = "Sign In to AarMaabd";
+}
+
+<div class="container py-5" style="max-width: 480px;">
+    <div class="p-4 p-md-5 bg-white rounded-4 border shadow-sm">
+        <div class="text-center mb-4">
+            <img src="~/images/branding/logo.jpg" alt="AarMaabd Logo" class="brand-logo-img mx-auto mb-2" style="width: 58px; height: 58px;" />
+            <h1 class="h3 fw-bold" style="color: var(--brand-rose);">Welcome Back</h1>
+            <p class="text-muted small">Sign in to manage your orders, wishlist & addresses</p>
+        </div>
+
+        <form asp-action="Login" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="ReturnUrl" />
+
+            <div class="mb-3">
+                <label asp-for="LoginIdentifier" class="form-label small fw-bold text-uppercase">Email or Mobile Number</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-person text-muted"></i></span>
+                    <input asp-for="LoginIdentifier" class="form-control border-start-0 rounded-end-3" placeholder="e.g. 01712345678 or you@email.com" />
+                </div>
+                <span asp-validation-for="LoginIdentifier" class="text-danger small"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Password" class="form-label small fw-bold text-uppercase">Password</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-lock text-muted"></i></span>
+                    <input asp-for="Password" class="form-control border-start-0 rounded-end-3" placeholder="••••••••" />
+                </div>
+                <span asp-validation-for="Password" class="text-danger small"></span>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="form-check">
+                    <input asp-for="RememberMe" class="form-check-input" />
+                    <label asp-for="RememberMe" class="form-check-label small text-muted"></label>
+                </div>
+                <a href="#" class="small text-muted text-decoration-underline">Forgot password?</a>
+            </div>
+
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger small p-2 rounded-3 mb-3"></div>
+
+            <button type="submit" class="btn-aarmaabd w-100 py-2 fs-6">
+                <i class="bi bi-box-arrow-in-right me-1"></i> Sign In
+            </button>
+        </form>
+
+        <div class="text-center mt-4 pt-3 border-top small text-muted">
+            Don't have an account yet? 
+            <a asp-action="Register" class="fw-bold" style="color: var(--brand-rose);">Create Account</a>
+        </div>
+
+        <!-- Quick Demo Credentials Box -->
+        <div class="mt-4 p-3 bg-light rounded-3 small border">
+            <strong class="d-block mb-1 text-dark"><i class="bi bi-info-circle me-1 text-primary"></i> Demo Login Accounts:</strong>
+            <div><strong>Admin:</strong> <code>admin@aarmaabd.com</code> / <code>Admin@123456</code></div>
+            <div><strong>Customer:</strong> <code>customer@aarmaabd.com</code> / <code>Customer@123456</code></div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,109 @@
+@model AarMaabd.ViewModels.OrderConfirmationViewModel
+@{
+    ViewData["Title"] = $"Order Confirmed - {Model.OrderNumber}";
+}
+
+<div class="container py-5" style="max-width: 760px;">
+    <!-- Success Banner -->
+    <div class="text-center mb-4">
+        <div class="rounded-circle d-inline-flex align-items-center justify-content-center p-3 mb-3 shadow-sm" 
+             style="background-color: var(--brand-blush); color: var(--brand-rose); width: 76px; height: 76px; font-size: 2.2rem;">
+            <i class="bi bi-bag-check-fill"></i>
+        </div>
+        <h1 class="h2 fw-bold" style="color: var(--brand-rose);">Thank You For Your Order!</h1>
+        <p class="text-muted">Your handcrafted pieces are being lovingly prepared by AarMaabd.</p>
+        <span class="badge px-3 py-2 rounded-pill fs-6" style="background-color: var(--brand-blush-light); color: var(--brand-rose); border: 1px solid var(--border-soft);">
+            Order Number: <strong>@Model.OrderNumber</strong>
+        </span>
+    </div>
+
+    <!-- Order Status & Timeline Card -->
+    <div class="card border-0 rounded-4 shadow-sm mb-4 p-4 bg-white">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <span class="text-muted small">Status:</span>
+                <span class="badge bg-warning-subtle text-warning-emphasis px-3 py-1 rounded-pill ms-1 fw-bold">
+                    @Model.Status
+                </span>
+            </div>
+            <div>
+                <span class="text-muted small">Payment:</span>
+                <span class="badge @(Model.PaymentStatus == AarMaabd.Models.PaymentStatus.Paid ? "bg-success-subtle text-success" : "bg-secondary-subtle text-dark") px-3 py-1 rounded-pill ms-1 fw-bold">
+                    @Model.PaymentStatus (@Model.PaymentMethod)
+                </span>
+            </div>
+        </div>
+
+        @if (Model.RequestedDeliveryDate.HasValue)
+        {
+            <div class="p-3 bg-light rounded-3 mb-3 small d-flex align-items-center gap-2 text-primary">
+                <i class="bi bi-calendar-event fs-5"></i>
+                <span>Requested Delivery Date: <strong>@Model.RequestedDeliveryDate.Value.ToString("dd MMMM, yyyy")</strong></span>
+            </div>
+        }
+
+        <!-- Delivery Destination -->
+        <div class="border-top pt-3 text-muted small">
+            <strong>Delivering to:</strong> @Model.CustomerName (@Model.CustomerPhone)<br />
+            <span>@Model.DeliveryAddress</span>
+        </div>
+    </div>
+
+    <!-- Items Summary -->
+    <div class="card border-0 rounded-4 shadow-sm mb-4 p-4 bg-white">
+        <h3 class="h5 fw-bold mb-3 border-bottom pb-2" style="color: var(--brand-rose);">Purchased Items</h3>
+
+        <div class="d-flex flex-column gap-3 mb-3">
+            @foreach (var item in Model.Items)
+            {
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-3">
+                        <img src="@(string.IsNullOrEmpty(item.ImageUrl) ? "/images/branding/logo.jpg" : item.ImageUrl)" 
+                             alt="@item.ProductName" class="rounded-2 border" style="width: 50px; height: 50px; object-fit: cover;" />
+                        <div>
+                            <strong class="d-block text-dark small">@item.ProductName</strong>
+                            <small class="text-muted">Qty: @item.Quantity × ৳@item.UnitPrice.ToString("N0")</small>
+                            @if (!string.IsNullOrEmpty(item.CustomizationNote))
+                            {
+                                <small class="text-muted d-block fst-italic">"@item.CustomizationNote"</small>
+                            }
+                        </div>
+                    </div>
+                    <span class="fw-bold">৳@item.LineTotal.ToString("N0")</span>
+                </div>
+            }
+        </div>
+
+        <div class="border-top pt-3">
+            <div class="d-flex justify-content-between text-muted small py-1">
+                <span>Subtotal:</span>
+                <span>৳@Model.SubTotal.ToString("N0")</span>
+            </div>
+            @if (Model.DiscountAmount > 0)
+            {
+                <div class="d-flex justify-content-between text-success small py-1">
+                    <span>Discount:</span>
+                    <span>-৳@Model.DiscountAmount.ToString("N0")</span>
+                </div>
+            }
+            <div class="d-flex justify-content-between text-muted small py-1">
+                <span>Delivery Charge (@Model.DeliveryZone):</span>
+                <span>@(Model.DeliveryFee == 0 ? "FREE" : $"৳{Model.DeliveryFee:N0}")</span>
+            </div>
+            <div class="d-flex justify-content-between fs-5 fw-bold pt-2 mt-2 border-top" style="color: var(--brand-rose);">
+                <span>Total Amount:</span>
+                <span>৳@Model.TotalAmount.ToString("N0")</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation actions -->
+    <div class="d-flex gap-3 justify-content-center flex-wrap">
+        <a href="/OrderTracking" class="btn-aarmaabd-outline">
+            <i class="bi bi-geo-alt"></i> Track Order Status
+        </a>
+        <a href="/Shop" class="btn-aarmaabd">
+            <i class="bi bi-bag"></i> Continue Shopping
+        </a>
+    </div>
+</div>

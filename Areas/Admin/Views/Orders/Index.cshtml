@@ -1,0 +1,106 @@
+@model List<AarMaabd.Models.Order>
+@{
+    ViewData["Title"] = "Manage Orders";
+    var selectedStatus = (AarMaabd.Models.OrderStatus?)ViewBag.SelectedStatus;
+}
+
+<div class="mb-4">
+    <h1 class="h3 fw-bold mb-1" style="color: var(--brand-rose);">Customer Orders</h1>
+    <p class="text-muted small mb-0">Track order fulfillment, process COD collections, and verify online payments.</p>
+</div>
+
+<!-- Filter Pills by Status -->
+<div class="d-flex gap-2 overflow-auto pb-3 mb-4" style="white-space: nowrap;">
+    <a href="/Admin/Orders" class="btn btn-sm rounded-pill @(!selectedStatus.HasValue ? "btn-aarmaabd" : "btn-light border")">
+        All Orders
+    </a>
+    @foreach (AarMaabd.Models.OrderStatus st in Enum.GetValues(typeof(AarMaabd.Models.OrderStatus)))
+    {
+        <a href="/Admin/Orders?status=@st" class="btn btn-sm rounded-pill @(selectedStatus == st ? "btn-aarmaabd" : "btn-light border")">
+            @st
+        </a>
+    }
+</div>
+
+<!-- Search Bar -->
+<div class="admin-card mb-4 p-3">
+    <form method="get" class="row g-2 align-items-center">
+        <div class="col-md-9">
+            <input type="text" name="search" class="form-control form-control-sm rounded-pill" 
+                   placeholder="Search Order Number, Customer Name, or Phone..." value="@ViewBag.Search" />
+        </div>
+        <div class="col-md-3">
+            <button type="submit" class="btn btn-sm btn-outline-secondary rounded-pill w-100">
+                <i class="bi bi-search me-1"></i> Search Orders
+            </button>
+        </div>
+    </form>
+</div>
+
+<div class="admin-card">
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5 text-muted small">No orders found matching the filter.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light small text-uppercase text-muted">
+                    <tr>
+                        <th>Order #</th>
+                        <th>Date</th>
+                        <th>Customer</th>
+                        <th>Destination</th>
+                        <th>Total</th>
+                        <th>Payment</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var order in Model)
+                    {
+                        <tr>
+                            <td>
+                                <strong class="text-dark">@order.OrderNumber</strong>
+                                <small class="text-muted d-block">@order.Items.Count items</small>
+                            </td>
+                            <td class="small text-muted">
+                                @order.CreatedAtUtc.ToLocalTime().ToString("dd MMM yyyy, hh:mm tt")
+                            </td>
+                            <td>
+                                <div class="fw-semibold">@order.CustomerName</div>
+                                <small class="text-muted">@order.CustomerPhone</small>
+                            </td>
+                            <td class="small">
+                                <span class="badge bg-light text-dark border">@order.DeliveryZone</span>
+                            </td>
+                            <td>
+                                <strong style="color: var(--brand-rose);">৳@order.TotalAmount.ToString("N0")</strong>
+                            </td>
+                            <td>
+                                <span class="badge @(order.PaymentStatus == AarMaabd.Models.PaymentStatus.Paid ? "bg-success-subtle text-success" : "bg-secondary-subtle text-dark") rounded-pill">
+                                    @order.PaymentStatus (@order.PaymentMethod)
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge @(order.Status == AarMaabd.Models.OrderStatus.Delivered ? "bg-success-subtle text-success" : "bg-warning-subtle text-warning-emphasis") rounded-pill">
+                                    @order.Status
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                <a asp-action="Details" asp-route-id="@order.Id" class="btn btn-sm btn-outline-primary rounded-pill">
+                                    View / Manage
+                                </a>
+                                <a asp-action="Invoice" asp-route-id="@order.Id" target="_blank" class="btn btn-sm btn-outline-secondary rounded-pill" title="Print Invoice">
+                                    <i class="bi bi-printer"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

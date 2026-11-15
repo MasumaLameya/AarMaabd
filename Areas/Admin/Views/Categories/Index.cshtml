@@ -1,0 +1,67 @@
+@model List<AarMaabd.Models.Category>
+@{
+    ViewData["Title"] = "Manage Categories";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h1 class="h3 fw-bold mb-1" style="color: var(--brand-rose);">Store Categories</h1>
+        <p class="text-muted small mb-0">Dynamic product categories & subcategories.</p>
+    </div>
+    <a asp-action="Create" class="btn-aarmaabd">
+        <i class="bi bi-plus-circle me-1"></i> Add Category
+    </a>
+</div>
+
+<div class="admin-card">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light small text-uppercase text-muted">
+                <tr>
+                    <th>Order</th>
+                    <th>Category</th>
+                    <th>Slug</th>
+                    <th>Subcategories</th>
+                    <th>Products</th>
+                    <th>Status</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var c in Model)
+                {
+                    <tr>
+                        <td class="fw-bold">@c.DisplayOrder</td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <img src="@(string.IsNullOrEmpty(c.ImageUrl) ? "/images/branding/logo.jpg" : c.ImageUrl)" 
+                                     alt="@c.Name" class="rounded-2 border" style="width: 40px; height: 40px; object-fit: cover;" />
+                                <div>
+                                    <strong class="text-dark small">@c.Name</strong>
+                                    <small class="text-muted d-block text-truncate" style="max-width: 250px;">@c.Description</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="small font-monospace">@c.Slug</td>
+                        <td>
+                            <span class="badge bg-light text-dark border">@c.SubCategories.Count sub-items</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark border">@c.Products.Count products</span>
+                        </td>
+                        <td>
+                            <span class="badge @(c.IsActive ? "bg-success" : "bg-secondary") rounded-pill">
+                                @(c.IsActive ? "Active" : "Disabled")
+                            </span>
+                        </td>
+                        <td class="text-end">
+                            <a asp-action="Edit" asp-route-id="@c.Id" class="btn btn-sm btn-outline-primary rounded-pill">
+                                Edit
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

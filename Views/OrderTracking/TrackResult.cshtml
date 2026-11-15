@@ -1,0 +1,90 @@
+@model AarMaabd.Models.Order
+@{
+    ViewData["Title"] = $"Tracking Order - {Model.OrderNumber}";
+}
+
+<div class="container py-5" style="max-width: 760px;">
+    <div class="p-4 p-md-5 bg-white rounded-4 border shadow-sm">
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom flex-wrap gap-2">
+            <div>
+                <span class="badge bg-light text-muted border rounded-pill px-3 py-1 mb-1">Live Tracking</span>
+                <h1 class="h3 fw-bold mb-0" style="color: var(--brand-rose);">Order #@Model.OrderNumber</h1>
+            </div>
+            <a href="/OrderTracking" class="btn btn-outline-secondary btn-sm rounded-pill">
+                <i class="bi bi-search me-1"></i> Track Another
+            </a>
+        </div>
+
+        <!-- Progress Steps -->
+        <div class="p-4 rounded-4 mb-4" style="background-color: var(--brand-blush-light); border: 1px solid var(--border-soft);">
+            <div class="d-flex justify-content-between text-center position-relative mb-2">
+                @{
+                    int step = (int)Model.Status;
+                }
+                <div style="flex: 1;">
+                    <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-1 fw-bold @(step >= 1 ? "bg-success text-white" : "bg-light text-muted border")" style="width: 38px; height: 38px;">
+                        @(step > 1 ? "✓" : "1")
+                    </div>
+                    <small class="d-block fw-semibold text-dark">Placed</small>
+                </div>
+                <div style="flex: 1;">
+                    <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-1 fw-bold @(step >= 2 ? "bg-success text-white" : "bg-light text-muted border")" style="width: 38px; height: 38px;">
+                        @(step > 2 ? "✓" : "2")
+                    </div>
+                    <small class="d-block fw-semibold text-dark">Confirmed</small>
+                </div>
+                <div style="flex: 1;">
+                    <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-1 fw-bold @(step >= 3 ? "bg-success text-white" : "bg-light text-muted border")" style="width: 38px; height: 38px;">
+                        @(step > 3 ? "✓" : "3")
+                    </div>
+                    <small class="d-block fw-semibold text-dark">Preparing</small>
+                </div>
+                <div style="flex: 1;">
+                    <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-1 fw-bold @(step >= 5 ? "bg-success text-white" : "bg-light text-muted border")" style="width: 38px; height: 38px;">
+                        @(step > 5 ? "✓" : "4")
+                    </div>
+                    <small class="d-block fw-semibold text-dark">Shipped</small>
+                </div>
+                <div style="flex: 1;">
+                    <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-1 fw-bold @(step >= 6 ? "bg-success text-white" : "bg-light text-muted border")" style="width: 38px; height: 38px;">
+                        @(step >= 6 ? "✓" : "5")
+                    </div>
+                    <small class="d-block fw-semibold text-dark">Delivered</small>
+                </div>
+            </div>
+            <div class="text-center mt-3">
+                <span class="badge px-3 py-2 rounded-pill fs-6 fw-bold" style="background-color: var(--brand-rose); color: #fff;">
+                    Current Status: @Model.Status
+                </span>
+            </div>
+        </div>
+
+        <!-- Timeline Log -->
+        <h4 class="h6 fw-bold mb-3 text-uppercase text-muted">Status Updates & History</h4>
+        <div class="timeline ps-3 mb-4 border-start" style="border-color: var(--border-soft) !important;">
+            @foreach (var history in Model.StatusHistory)
+            {
+                <div class="mb-3 position-relative ps-3">
+                    <span class="position-absolute top-0 start-0 translate-middle-x rounded-circle" style="width: 10px; height: 10px; background-color: var(--brand-rose); margin-left: -1px;"></span>
+                    <strong class="d-block text-dark small">@history.Status</strong>
+                    <small class="text-muted d-block">@history.Note</small>
+                    <small class="text-muted" style="font-size: 0.75rem;">@history.ChangedAtUtc.ToLocalTime().ToString("dd MMM yyyy, hh:mm tt")</small>
+                </div>
+            }
+        </div>
+
+        <!-- Summary & Details -->
+        <div class="border-top pt-3 small text-muted">
+            <div class="row">
+                <div class="col-md-6 mb-2">
+                    <strong>Recipient:</strong> @Model.CustomerName (@Model.CustomerPhone)<br />
+                    <strong>Delivery Address:</strong> @Model.StreetAddress, @Model.Area, @Model.UpazilaThana, @Model.District
+                </div>
+                <div class="col-md-6 mb-2 text-md-end">
+                    <strong>Payment:</strong> @Model.PaymentStatus (@Model.PaymentMethod)<br />
+                    <strong>Payable Total:</strong> <span class="fw-bold fs-6" style="color: var(--brand-rose);">৳@Model.TotalAmount.ToString("N0")</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

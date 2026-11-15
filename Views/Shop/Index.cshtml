@@ -1,0 +1,199 @@
+@model AarMaabd.ViewModels.ShopViewModel
+@{
+    ViewData["Title"] = string.IsNullOrEmpty(Model.SelectedCategoryName) ? "Shop All Products" : $"{Model.SelectedCategoryName} Collection";
+}
+
+<div class="container py-4">
+    <!-- Breadcrumbs -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb" style="font-size: 0.85rem;">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Shop" asp-action="Index">Shop</a></li>
+            @if (!string.IsNullOrEmpty(Model.SelectedCategoryName))
+            {
+                <li class="breadcrumb-item active" aria-current="page">@Model.SelectedCategoryName</li>
+            }
+        </ol>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <div>
+            <h1 class="h2 mb-1" style="color: var(--brand-rose);">
+                @(string.IsNullOrEmpty(Model.SelectedCategoryName) ? "All Collections" : Model.SelectedCategoryName)
+            </h1>
+            <p class="text-muted small mb-0">Showing @Model.Products.Count of @Model.TotalProducts handcrafted items</p>
+        </div>
+
+        <!-- Sorting dropdown -->
+        <div class="d-flex align-items-center gap-2">
+            <label for="sortBySelect" class="text-muted small d-none d-sm-inline">Sort by:</label>
+            <select id="sortBySelect" class="form-select form-select-sm rounded-pill" style="width: auto; min-width: 150px;" onchange="handleSortChange(this.value)">
+                <option value="featured" selected="@(Model.SortBy == "featured")">Featured</option>
+                <option value="latest" selected="@(Model.SortBy == "latest")">Newest Arrivals</option>
+                <option value="price_asc" selected="@(Model.SortBy == "price_asc")">Price: Low to High</option>
+                <option value="price_desc" selected="@(Model.SortBy == "price_desc")">Price: High to Low</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Active Category Horizontal Pills -->
+    <div class="d-flex gap-2 overflow-auto pb-3 mb-4" style="white-space: nowrap;">
+        <a href="/Shop" class="btn btn-sm rounded-pill @(string.IsNullOrEmpty(Model.SelectedCategorySlug) ? "btn-aarmaabd" : "btn-light border")">
+            All Products
+        </a>
+        @foreach (var cat in Model.Categories)
+        {
+            <a href="/Shop?category=@cat.Slug" class="btn btn-sm rounded-pill @(Model.SelectedCategorySlug == cat.Slug ? "btn-aarmaabd" : "btn-light border")">
+                @cat.Name
+            </a>
+        }
+    </div>
+
+    <!-- Main Content & Filters -->
+    <div class="row g-4">
+        <!-- Sidebar Filters -->
+        <aside class="col-lg-3 d-none d-lg-block">
+            <div class="p-4 bg-white rounded-4 border shadow-sm">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0 fw-bold fs-6" style="color: var(--brand-rose);"><i class="bi bi-funnel me-1"></i> Filter By</h5>
+                    <a href="/Shop" class="text-muted small text-decoration-underline">Reset</a>
+                </div>
+
+                <!-- Category list -->
+                <div class="mb-4">
+                    <h6 class="fw-bold small text-uppercase text-muted mb-2">Category</h6>
+                    <ul class="list-unstyled mb-0" style="font-size: 0.9rem;">
+                        <li class="mb-1">
+                            <a href="/Shop" class="@(string.IsNullOrEmpty(Model.SelectedCategorySlug) ? "fw-bold text-dark" : "text-muted")">
+                                All Categories
+                            </a>
+                        </li>
+                        @foreach (var c in Model.Categories)
+                        {
+                            <li class="mb-1">
+                                <a href="/Shop?category=@c.Slug" class="@(Model.SelectedCategorySlug == c.Slug ? "fw-bold" : "text-muted")" style="@(Model.SelectedCategorySlug == c.Slug ? "color: var(--brand-rose) !important;" : "")">
+                                    @c.Name
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+
+                <!-- Price Filter Form -->
+                <form method="get" asp-controller="Shop" asp-action="Index">
+                    <input type="hidden" name="category" value="@Model.SelectedCategorySlug" />
+                    <input type="hidden" name="sort" value="@Model.SortBy" />
+
+                    <div class="mb-3">
+                        <h6 class="fw-bold small text-uppercase text-muted mb-2">Price Range (৳)</h6>
+                        <div class="d-flex align-items-center gap-2">
+                            <input type="number" name="minPrice" min="0" class="form-control form-control-sm rounded-3" placeholder="Min" value="@Model.MinPrice" />
+                            <span class="text-muted">-</span>
+                            <input type="number" name="maxPrice" min="0" class="form-control form-control-sm rounded-3" placeholder="Max" value="@Model.MaxPrice" />
+                        </div>
+                    </div>
+
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" name="inStock" value="true" id="inStockCheck" @(Model.InStockOnly == true ? "checked" : "") />
+                        <label class="form-check-label small" for="inStockCheck">
+                            In Stock Only
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn-aarmaabd w-100 btn-sm">Apply Filter</button>
+                </form>
+            </div>
+        </aside>
+
+        <!-- Product Grid -->
+        <div class="col-lg-9">
+            @if (!Model.Products.Any())
+            {
+                <div class="text-center py-5 bg-white rounded-4 border p-4">
+                    <div class="mb-3 fs-1 text-muted"><i class="bi bi-search-heart"></i></div>
+                    <h4 style="color: var(--brand-rose);">No items found</h4>
+                    <p class="text-muted small">We couldn't find any products matching your selected criteria.</p>
+                    <a href="/Shop" class="btn-aarmaabd btn-sm mt-2">Clear Filters & View All</a>
+                </div>
+            }
+            else
+            {
+                <div class="row g-3 g-md-4">
+                    @foreach (var product in Model.Products)
+                    {
+                        <div class="col-6 col-md-4">
+                            <div class="product-card">
+                                <div class="product-img-wrap">
+                                    @if (product.HasDiscount)
+                                    {
+                                        <div class="product-badges">
+                                            <span class="badge-discount">@product.DiscountPercentage% OFF</span>
+                                        </div>
+                                    }
+                                    <a href="/product/@product.Slug">
+                                        <img src="@product.PrimaryImageUrl" alt="@product.Name" loading="lazy" />
+                                    </a>
+                                    <div class="product-actions-floating">
+                                        <button type="button" class="btn-wishlist-float" title="Add to Wishlist">
+                                            <i class="bi bi-heart"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="product-body">
+                                    <span class="product-category-label">@(product.Category?.Name ?? "Handmade")</span>
+                                    <h3 class="product-title">
+                                        <a href="/product/@product.Slug">@product.Name</a>
+                                    </h3>
+
+                                    <div class="product-price-row">
+                                        <span class="product-current-price">৳@product.CurrentEffectivePrice.ToString("N0")</span>
+                                        @if (product.HasDiscount)
+                                        {
+                                            <span class="product-old-price">৳@product.Price.ToString("N0")</span>
+                                        }
+                                    </div>
+
+                                    <button type="button" class="btn-add-to-cart" onclick="quickAddToCart(@product.Id, this)">
+                                        <i class="bi bi-bag-plus"></i> Add to Cart
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <!-- Pagination -->
+                @if (Model.TotalPages > 1)
+                {
+                    <nav class="mt-5" aria-label="Product pagination">
+                        <ul class="pagination justify-content-center">
+                            @for (int p = 1; p <= Model.TotalPages; p++)
+                            {
+                                <li class="page-item @(p == Model.CurrentPage ? "active" : "")">
+                                    <a class="page-link rounded-circle mx-1" 
+                                       href="/Shop?category=@Model.SelectedCategorySlug&sort=@Model.SortBy&page=@p" 
+                                       style="@(p == Model.CurrentPage ? "background-color: var(--brand-rose); border-color: var(--brand-rose); color: #fff;" : "")">
+                                        @p
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    </nav>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function handleSortChange(sortVal) {
+            const url = new URL(window.location.href);
+            url.searchParams.set('sort', sortVal);
+            url.searchParams.set('page', '1');
+            window.location.href = url.toString();
+        }
+    </script>
+}

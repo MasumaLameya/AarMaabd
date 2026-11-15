@@ -1,0 +1,228 @@
+@model AarMaabd.Models.Order
+@{
+    ViewData["Title"] = $"Manage Order - {Model.OrderNumber}";
+}
+
+<div class="mb-4">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <h1 class="h3 fw-bold mb-1" style="color: var(--brand-rose);">Order #@Model.OrderNumber</h1>
+            <p class="text-muted small mb-0">Placed on @Model.CreatedAtUtc.ToLocalTime().ToString("dd MMMM yyyy, hh:mm tt")</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-action="Invoice" asp-route-id="@Model.Id" target="_blank" class="btn btn-sm btn-outline-secondary rounded-pill">
+                <i class="bi bi-printer me-1"></i> Print Invoice
+            </a>
+            <a asp-action="Index" class="btn btn-outline-secondary btn-sm rounded-pill">
+                <i class="bi bi-arrow-left me-1"></i> Back to Orders
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Left: Status Transitions & Actions -->
+    <div class="col-lg-5">
+        <!-- Status Update Card -->
+        <div class="admin-card mb-4">
+            <h4 class="h6 fw-bold mb-3 border-bottom pb-2 text-uppercase" style="color: var(--brand-rose);">
+                <i class="bi bi-arrow-repeat me-1"></i> Update Order Status
+            </h4>
+
+            <div class="mb-3">
+                <span class="text-muted small">Current Fulfillment Status:</span>
+                <span class="badge @(Model.Status == AarMaabd.Models.OrderStatus.Delivered ? "bg-success" : "bg-warning text-dark") px-3 py-1 rounded-pill ms-1 fw-bold">
+                    @Model.Status
+                </span>
+            </div>
+
+            <form asp-action="UpdateStatus" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="orderId" value="@Model.Id" />
+
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Select New Status</label>
+                    <select name="newStatus" class="form-select rounded-3">
+                        @foreach (AarMaabd.Models.OrderStatus st in Enum.GetValues(typeof(AarMaabd.Models.OrderStatus)))
+                        {
+                            <option value="@st" selected="@(Model.Status == st)">@st</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Status Update Note (Optional)</label>
+                    <input type="text" name="adminNotes" class="form-control rounded-3" placeholder="e.g. Dispatched via Pathao Courier / Baked & Packed" />
+                </div>
+
+                <button type="submit" class="btn-aarmaabd w-100 btn-sm">
+                    Update Order Status
+                </button>
+            </form>
+        </div>
+
+        <!-- Payment Update Card -->
+        <div class="admin-card mb-4">
+            <h4 class="h6 fw-bold mb-3 border-bottom pb-2 text-uppercase" style="color: var(--brand-rose);">
+                <i class="bi bi-cash-coin me-1"></i> Update Payment
+            </h4>
+
+            <div class="mb-3">
+                <span class="text-muted small">Current Payment:</span>
+                <span class="badge @(Model.PaymentStatus == AarMaabd.Models.PaymentStatus.Paid ? "bg-success" : "bg-danger") px-3 py-1 rounded-pill ms-1 fw-bold">
+                    @Model.PaymentStatus (@Model.PaymentMethod)
+                </span>
+                @if (!string.IsNullOrEmpty(Model.PaymentTransactionId))
+                {
+                    <small class="d-block text-muted mt-1 font-monospace">Trx: @Model.PaymentTransactionId</small>
+                }
+            </div>
+
+            <form asp-action="UpdatePayment" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="orderId" value="@Model.Id" />
+
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Payment Status</label>
+                    <select name="paymentStatus" class="form-select rounded-3">
+                        @foreach (AarMaabd.Models.PaymentStatus ps in Enum.GetValues(typeof(AarMaabd.Models.PaymentStatus)))
+                        {
+                            <option value="@ps" selected="@(Model.PaymentStatus == ps)">@ps</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Transaction Reference (TrxID)</label>
+                    <input type="text" name="transactionId" class="form-control rounded-3" value="@Model.PaymentTransactionId" placeholder="e.g. COD-COLLECTED or BKX12345" />
+                </div>
+
+                <button type="submit" class="btn-aarmaabd-gold w-100 btn-sm">
+                    Record Payment Update
+                </button>
+            </form>
+        </div>
+
+        <!-- Customer & Destination Card -->
+        <div class="admin-card">
+            <h4 class="h6 fw-bold mb-3 border-bottom pb-2 text-uppercase" style="color: var(--brand-rose);">
+                <i class="bi bi-geo-alt me-1"></i> Customer & Shipping
+            </h4>
+            <div class="small text-muted mb-2">
+                <strong>Name:</strong> @Model.CustomerName<br />
+                <strong>Phone:</strong> <a href="tel:@Model.CustomerPhone" class="fw-bold text-dark">@Model.CustomerPhone</a><br />
+                <strong>Email:</strong> @(string.IsNullOrEmpty(Model.CustomerEmail) ? "None provided" : Model.CustomerEmail)<br />
+                <strong>Address:</strong> @Model.StreetAddress, @Model.Area, @Model.UpazilaThana, @Model.District, @Model.Division<br />
+                <strong>Zone:</strong> @Model.DeliveryZone<br />
+                @if (!string.IsNullOrEmpty(Model.Landmark))
+                {
+                    <span><strong>Landmark:</strong> @Model.Landmark<br /></span>
+                }
+                @if (Model.RequestedDeliveryDate.HasValue)
+                {
+                    <div class="mt-2 p-2 bg-light rounded text-primary">
+                        <i class="bi bi-calendar-event me-1"></i> Requested Delivery: <strong>@Model.RequestedDeliveryDate.Value.ToString("dd MMMM, yyyy")</strong>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(Model.DeliveryNotes))
+                {
+                    <div class="mt-2 p-2 bg-light rounded">
+                        <strong>Customer Note:</strong> "@Model.DeliveryNotes"
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Right: Items Snapshot & History -->
+    <div class="col-lg-7">
+        <div class="admin-card mb-4">
+            <h4 class="h6 fw-bold mb-3 border-bottom pb-2 text-uppercase" style="color: var(--brand-rose);">
+                Ordered Items Snapshot
+            </h4>
+
+            <div class="table-responsive mb-3">
+                <table class="table align-middle">
+                    <thead class="table-light small text-uppercase text-muted">
+                        <tr>
+                            <th>Item</th>
+                            <th>Unit Price</th>
+                            <th>Qty</th>
+                            <th class="text-end">Line Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.Items)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <img src="@(string.IsNullOrEmpty(item.ImageUrlSnapshot) ? "/images/branding/logo.jpg" : item.ImageUrlSnapshot)" 
+                                             alt="@item.ProductNameSnapshot" class="rounded-2 border" style="width: 44px; height: 44px; object-fit: cover;" />
+                                        <div>
+                                            <strong class="d-block small text-dark">@item.ProductNameSnapshot</strong>
+                                            @if (!string.IsNullOrEmpty(item.VariantNameSnapshot))
+                                            {
+                                                <small class="badge bg-light text-muted border">@item.VariantNameSnapshot</small>
+                                            }
+                                            @if (!string.IsNullOrEmpty(item.CustomizationNoteSnapshot))
+                                            {
+                                                <small class="text-muted d-block fst-italic">"@item.CustomizationNoteSnapshot"</small>
+                                            }
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="small">৳@item.UnitPriceSnapshot.ToString("N0")</td>
+                                <td class="small fw-bold">@item.Quantity</td>
+                                <td class="text-end fw-bold" style="color: var(--brand-rose);">৳@item.LineTotal.ToString("N0")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Totals breakdown -->
+            <div class="border-top pt-3 small text-muted">
+                <div class="d-flex justify-content-between py-1">
+                    <span>Subtotal:</span>
+                    <span class="text-dark fw-semibold">৳@Model.SubTotal.ToString("N0")</span>
+                </div>
+                @if (Model.CouponDiscountAmount > 0)
+                {
+                    <div class="d-flex justify-content-between py-1 text-success">
+                        <span>Coupon Discount (@Model.AppliedCouponCode):</span>
+                        <span class="fw-bold">-৳@Model.CouponDiscountAmount.ToString("N0")</span>
+                    </div>
+                }
+                <div class="d-flex justify-content-between py-1">
+                    <span>Shipping Fee (@Model.DeliveryZone):</span>
+                    <span class="text-dark fw-semibold">৳@Model.DeliveryFee.ToString("N0")</span>
+                </div>
+                <div class="d-flex justify-content-between fs-4 fw-bold pt-2 mt-2 border-top" style="color: var(--brand-rose);">
+                    <span>Total Amount:</span>
+                    <span>৳@Model.TotalAmount.ToString("N0")</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Audit & Status History -->
+        <div class="admin-card">
+            <h4 class="h6 fw-bold mb-3 border-bottom pb-2 text-uppercase text-muted">
+                <i class="bi bi-clock-history me-1"></i> Order Audit & Timeline
+            </h4>
+            <div class="ps-3 border-start" style="border-color: var(--border-soft) !important;">
+                @foreach (var h in Model.StatusHistory)
+                {
+                    <div class="mb-3 position-relative ps-3">
+                        <span class="position-absolute top-0 start-0 translate-middle-x rounded-circle" style="width: 10px; height: 10px; background-color: var(--brand-rose); margin-left: -1px;"></span>
+                        <div class="d-flex justify-content-between">
+                            <strong class="text-dark small">@h.Status</strong>
+                            <small class="text-muted" style="font-size: 0.75rem;">@h.ChangedAtUtc.ToLocalTime().ToString("dd MMM, hh:mm tt")</small>
+                        </div>
+                        <small class="text-muted d-block">By: <strong>@h.ChangedBy</strong> — @h.Note</small>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

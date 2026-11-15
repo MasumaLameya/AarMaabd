@@ -1,0 +1,241 @@
+@model AarMaabd.ViewModels.CheckoutViewModel
+@{
+    ViewData["Title"] = "Checkout - Complete Your Order";
+}
+
+<div class="container py-4">
+    <h1 class="h2 mb-4" style="color: var(--brand-rose);"><i class="bi bi-shield-check me-2"></i> Secure Checkout</h1>
+
+    <form asp-action="PlaceOrder" method="post" id="checkoutForm">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="AppliedCouponCode" />
+
+        <div class="row g-4">
+            <!-- Left: Delivery Address & Payment Method -->
+            <div class="col-lg-7">
+                <!-- Customer Information -->
+                <div class="p-4 bg-white rounded-4 border shadow-sm mb-4">
+                    <h3 class="h5 fw-bold mb-3 pb-2 border-bottom" style="color: var(--brand-rose);">
+                        <i class="bi bi-person me-2"></i> 1. Contact Information
+                    </h3>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="CustomerName" class="form-label small fw-bold text-uppercase">Full Name *</label>
+                            <input asp-for="CustomerName" class="form-control rounded-3" placeholder="e.g. Ayesha Siddiqua" />
+                            <span asp-validation-for="CustomerName" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="CustomerPhone" class="form-label small fw-bold text-uppercase">Bangladeshi Mobile *</label>
+                            <input asp-for="CustomerPhone" class="form-control rounded-3" placeholder="e.g. 01712345678" />
+                            <span asp-validation-for="CustomerPhone" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="CustomerEmail" class="form-label small fw-bold text-uppercase">Email Address (Optional)</label>
+                            <input asp-for="CustomerEmail" class="form-control rounded-3" placeholder="e.g. ayesha@example.com" />
+                            <span asp-validation-for="CustomerEmail" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Shipping Address -->
+                <div class="p-4 bg-white rounded-4 border shadow-sm mb-4">
+                    <h3 class="h5 fw-bold mb-3 pb-2 border-bottom" style="color: var(--brand-rose);">
+                        <i class="bi bi-geo-alt me-2"></i> 2. Delivery Address (Bangladesh)
+                    </h3>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="Division" class="form-label small fw-bold text-uppercase">Division *</label>
+                            <select asp-for="Division" class="form-select rounded-3" id="divisionSelect">
+                                <option value="Dhaka" selected>Dhaka (Delivery Inside Dhaka Only)</option>
+                            </select>
+                            <span asp-validation-for="Division" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="District" class="form-label small fw-bold text-uppercase">District *</label>
+                            <input asp-for="District" class="form-control rounded-3" value="Dhaka" placeholder="Dhaka" />
+                            <span asp-validation-for="District" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="UpazilaThana" class="form-label small fw-bold text-uppercase">Upazila / Thana *</label>
+                            <input asp-for="UpazilaThana" class="form-control rounded-3" placeholder="e.g. Dhanmondi, Mirpur, Uttara..." />
+                            <span asp-validation-for="UpazilaThana" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="Area" class="form-label small fw-bold text-uppercase">Area / Sector</label>
+                            <input asp-for="Area" class="form-control rounded-3" placeholder="e.g. Sector 4, Block D, Road 27..." />
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="StreetAddress" class="form-label small fw-bold text-uppercase">Detailed Address (House, Road, Flat) *</label>
+                            <textarea asp-for="StreetAddress" rows="2" class="form-control rounded-3" placeholder="e.g. House #14, Road #7, Flat 3B..."></textarea>
+                            <span asp-validation-for="StreetAddress" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="Landmark" class="form-label small fw-bold text-uppercase">Nearby Landmark (Optional)</label>
+                            <input asp-for="Landmark" class="form-control rounded-3" placeholder="e.g. Near Star Kabab, Beside Mosque" />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="RequestedDeliveryDate" class="form-label small fw-bold text-uppercase">Preferred Delivery Date (Cakes & Food)</label>
+                            <input asp-for="RequestedDeliveryDate" class="form-control rounded-3" min="@DateTime.UtcNow.AddDays(1).ToString("yyyy-MM-dd")" />
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="DeliveryNotes" class="form-label small fw-bold text-uppercase">Delivery Instructions</label>
+                            <input asp-for="DeliveryNotes" class="form-control rounded-3" placeholder="e.g. Please call before arriving / Fragile cake package" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Delivery Zone & Payment Selection -->
+                <div class="p-4 bg-white rounded-4 border shadow-sm">
+                    <h3 class="h5 fw-bold mb-3 pb-2 border-bottom" style="color: var(--brand-rose);">
+                        <i class="bi bi-credit-card me-2"></i> 3. Delivery Zone & Payment
+                    </h3>
+
+                    <!-- Delivery Zone -->
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-uppercase mb-2">Delivery Coverage & Zone:</label>
+                        <div class="alert alert-warning d-flex align-items-center mb-3 rounded-3 py-2 px-3 small border-0" style="background-color: #FFF3CD;">
+                            <i class="bi bi-info-circle-fill text-warning-emphasis fs-5 me-2 flex-shrink-0"></i>
+                            <div>
+                                <strong>Delivery Only Inside Dhaka:</strong> To guarantee product freshness, damage protection, and swift service, orders are currently accepted for <strong>Dhaka City only</strong>.
+                            </div>
+                        </div>
+
+                        <input type="hidden" asp-for="DeliveryZone" value="Inside Dhaka" id="zoneInsideDhaka" />
+                        <div class="border p-3 rounded-3 d-flex align-items-center justify-content-between" style="background-color: var(--surface-alt); border-color: var(--brand-rose) !important;">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-geo-alt-fill fs-4" style="color: var(--brand-rose);"></i>
+                                <div>
+                                    <strong class="text-dark">Inside Dhaka City</strong>
+                                    <small class="d-block text-muted">Doorstep delivery within 24–48 hours</small>
+                                </div>
+                            </div>
+                            <span class="fw-bold fs-5" style="color: var(--brand-rose);">৳70</span>
+                        </div>
+                    </div>
+
+                    <!-- Payment Method -->
+                    <div>
+                        <label class="form-label small fw-bold text-uppercase mb-2">Select Payment Method:</label>
+                        <div class="d-flex flex-column gap-2">
+                            <label class="border p-3 rounded-3 d-flex align-items-center justify-content-between cursor-pointer">
+                                <div class="d-flex align-items-center gap-3">
+                                    <input type="radio" asp-for="PaymentMethod" value="@AarMaabd.Models.PaymentMethod.CashOnDelivery" class="form-check-input" checked />
+                                    <div>
+                                        <strong>Cash on Delivery (COD)</strong>
+                                        <small class="d-block text-muted">Pay in cash when your package arrives at your door</small>
+                                    </div>
+                                </div>
+                                <i class="bi bi-cash-stack fs-3" style="color: var(--brand-rose);"></i>
+                            </label>
+
+                            <label class="border p-3 rounded-3 d-flex align-items-center justify-content-between cursor-pointer">
+                                <div class="d-flex align-items-center gap-3">
+                                    <input type="radio" asp-for="PaymentMethod" value="@AarMaabd.Models.PaymentMethod.OnlinePayment" class="form-check-input" />
+                                    <div>
+                                        <strong>Online Payment (bKash / Nagad / Cards)</strong>
+                                        <small class="d-block text-muted">Instant verified payment via Mobile Banking or Cards</small>
+                                    </div>
+                                </div>
+                                <div class="d-flex gap-1 text-muted fs-5">
+                                    <i class="bi bi-phone"></i>
+                                    <i class="bi bi-credit-card-2-front"></i>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Order Summary Sticky Card -->
+            <div class="col-lg-5">
+                <div class="p-4 bg-white rounded-4 border shadow-sm sticky-top" style="top: 90px;">
+                    <h3 class="h5 fw-bold mb-3 pb-2 border-bottom" style="color: var(--brand-rose);">
+                        Order Review (@Model.CartSummary.TotalItemsCount items)
+                    </h3>
+
+                    <!-- Items list -->
+                    <div class="overflow-auto pe-1 mb-3" style="max-height: 240px;">
+                        @foreach (var item in Model.CartSummary.Items)
+                        {
+                            <div class="d-flex align-items-center gap-3 py-2 border-bottom">
+                                <img src="@item.ImageUrl" alt="@item.ProductName" class="rounded-2 border" style="width: 48px; height: 48px; object-fit: cover;" />
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-0 small fw-bold text-truncate" style="max-width: 180px;">@item.ProductName</h6>
+                                    <small class="text-muted">Qty: @item.Quantity × ৳@item.UnitPrice.ToString("N0")</small>
+                                </div>
+                                <span class="fw-bold small">৳@item.LineTotal.ToString("N0")</span>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Totals breakdown -->
+                    <div class="d-flex justify-content-between py-1 text-muted small">
+                        <span>Subtotal:</span>
+                        <span class="text-dark fw-semibold">৳@Model.CartSummary.SubTotal.ToString("N0")</span>
+                    </div>
+
+                    @if (Model.CartSummary.CouponDiscount > 0)
+                    {
+                        <div class="d-flex justify-content-between py-1 text-success small">
+                            <span>Coupon Discount (@Model.AppliedCouponCode):</span>
+                            <span class="fw-bold">-৳@Model.CartSummary.CouponDiscount.ToString("N0")</span>
+                        </div>
+                    }
+
+                    <div class="d-flex justify-content-between py-1 text-muted small">
+                        <span>Shipping Fee:</span>
+                        <span class="text-dark fw-semibold" id="shippingFeeText">
+                            @(Model.CartSummary.EstimatedDeliveryFee == 0 ? "FREE" : $"৳{Model.CartSummary.EstimatedDeliveryFee:N0}")
+                        </span>
+                    </div>
+
+                    <hr class="my-3" />
+
+                    <div class="d-flex justify-content-between align-items-baseline mb-4">
+                        <span class="fs-5 fw-bold" style="color: var(--brand-rose);">Payable Total:</span>
+                        <span class="fs-2 fw-bold" style="color: var(--brand-rose);" id="grandTotalText">
+                            ৳@Model.CartSummary.GrandTotal.ToString("N0")
+                        </span>
+                    </div>
+
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger small p-2 rounded-3 mb-3"></div>
+
+                    <button type="submit" class="btn-aarmaabd w-100 py-3 fs-6">
+                        <i class="bi bi-lock-fill me-1"></i> Place Order Now
+                    </button>
+
+                    <div class="text-center mt-3 text-muted" style="font-size: 0.8rem;">
+                        By clicking Place Order, you agree to AarMaabd's delivery & cancellation policies.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function refreshTotals() {
+            const isFree = @(Model.CartSummary.IsEligibleForFreeDelivery ? "true" : "false");
+            const subTotal = @Model.CartSummary.SubTotal;
+            const discount = @Model.CartSummary.CouponDiscount;
+            let fee = isFree ? 0 : 70;
+
+            document.getElementById('shippingFeeText').textContent = fee === 0 ? "FREE" : `৳${fee}`;
+            const total = Math.max(0, subTotal - discount + fee);
+            document.getElementById('grandTotalText').textContent = `৳${total.toLocaleString()}`;
+        }
+    </script>
+}

@@ -1,0 +1,319 @@
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - AarMaabd | Handmade With Love</title>
+    <meta name="description" content="AarMaabd - Bangladesh's premier lifestyle store for handcrafted crochet, artisan cakes & desserts, resin art, gypsum decor, jewelry, and custom gifts." />
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap 5 & Icons -->
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- Custom Site Styles -->
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <!-- 1. Top Announcement Bar -->
+    <div class="announcement-bar">
+        <span>🌸 Welcome to AarMaabd - Handmade With Love | Delivery across all of Bangladesh!</span>
+    </div>
+
+    <!-- 2. Primary Header -->
+    <header class="site-header">
+        <div class="container">
+            <div class="header-main d-flex align-items-center justify-content-between">
+                <!-- Brand Logo & Name -->
+                <a asp-controller="Home" asp-action="Index" class="brand-logo-wrap">
+                    <img src="~/images/branding/logo.jpg" alt="AarMaabd Logo" class="brand-logo-img" />
+                    <div class="brand-logo-text">
+                        <span class="brand-title">AarMaabd</span>
+                        <span class="brand-tagline">Your Lifestyle Store</span>
+                    </div>
+                </a>
+
+                <!-- Desktop Search Bar -->
+                <div class="d-none d-lg-block" style="width: 380px;">
+                    <form asp-controller="Shop" asp-action="Index" method="get">
+                        <div class="input-group">
+                            <input type="text" name="q" class="form-control rounded-start-pill ps-3 border-end-0" 
+                                   placeholder="Search crochet, cakes, resin jewelry..." 
+                                   style="border-color: var(--border-soft); background-color: var(--brand-ivory);" />
+                            <button class="btn rounded-end-pill px-3" type="submit" 
+                                    style="background-color: var(--brand-ivory); border-color: var(--border-soft); color: var(--brand-rose); border-left: 0;">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Header Actions (Search, Account, Wishlist, Cart) -->
+                <div class="header-actions">
+                    <!-- Mobile Search Trigger -->
+                    <a href="/Shop" class="header-icon-btn d-lg-none" title="Search">
+                        <i class="bi bi-search"></i>
+                    </a>
+
+                    <!-- Account Dropdown -->
+                    <div class="dropdown">
+                        <button class="header-icon-btn" type="button" id="accountDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="Account">
+                            <i class="bi bi-person"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3 mt-2" aria-labelledby="accountDropdown" style="min-width: 200px;">
+                            @if (SignInManager.IsSignedIn(User))
+                            {
+                                <li class="px-3 py-2 border-bottom">
+                                    <small class="text-muted d-block">Signed in as</small>
+                                    <strong class="text-truncate d-block" style="color: var(--brand-rose);">@User.Identity?.Name</strong>
+                                </li>
+                                @if (User.IsInRole("Admin"))
+                                {
+                                    <li>
+                                        <a class="dropdown-item py-2" asp-area="Admin" asp-controller="Dashboard" asp-action="Index" style="color: #A3485E; font-weight: 600;">
+                                            <i class="bi bi-speedometer2 me-2"></i> Admin Panel
+                                        </a>
+                                    </li>
+                                }
+                                <li>
+                                    <a class="dropdown-item py-2" asp-area="" asp-controller="Account" asp-action="Dashboard">
+                                        <i class="bi bi-person-circle me-2"></i> My Account
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item py-2" asp-area="" asp-controller="Account" asp-action="Dashboard">
+                                        <i class="bi bi-box-seam me-2"></i> My Orders
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <form asp-area="" asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                                        <button type="submit" class="dropdown-item text-danger py-2">
+                                            <i class="bi bi-box-arrow-right me-2"></i> Logout
+                                        </button>
+                                    </form>
+                                </li>
+                            }
+                            else
+                            {
+                                <li>
+                                    <a class="dropdown-item py-2" asp-area="" asp-controller="Account" asp-action="Login">
+                                        <i class="bi bi-box-arrow-in-right me-2"></i> Sign In
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item py-2" asp-area="" asp-controller="Account" asp-action="Register">
+                                        <i class="bi bi-person-plus me-2"></i> Create Account
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item py-2 text-muted" asp-area="" asp-controller="OrderTracking" asp-action="Index">
+                                        <i class="bi bi-geo-alt me-2"></i> Track Guest Order
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+
+                    <!-- Wishlist -->
+                    <a asp-controller="Account" asp-action="Dashboard" class="header-icon-btn d-none d-sm-flex" title="Wishlist">
+                        <i class="bi bi-heart"></i>
+                    </a>
+
+                    <!-- Shopping Cart Drawer / Link -->
+                    <a asp-controller="Cart" asp-action="Index" class="header-icon-btn" title="View Cart">
+                        <i class="bi bi-bag"></i>
+                        <span class="badge-counter cart-count-badge" style="display: none;">0</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Category Navigation Bar -->
+        <nav class="category-nav-bar" aria-label="Main navigation">
+            <div class="container">
+                <ul class="category-nav-list">
+                    <li><a asp-controller="Home" asp-action="Index" class="category-nav-link">Home</a></li>
+                    <li><a asp-controller="Shop" asp-action="Index" class="category-nav-link">Shop All</a></li>
+                    <li><a href="/Shop?category=crochet" class="category-nav-link">Crochet</a></li>
+                    <li><a href="/Shop?category=cakes-desserts" class="category-nav-link">Food & Bakery</a></li>
+                    <li><a href="/Shop?category=savory-food" class="category-nav-link">Savory</a></li>
+                    <li><a href="/Shop?category=resin-art" class="category-nav-link">Resin Art</a></li>
+                    <li><a href="/Shop?category=gypsum-candles" class="category-nav-link">Gypsum Decor</a></li>
+                    <li><a href="/Shop?category=jewellery-accessories" class="category-nav-link">Accessories</a></li>
+                    <li><a href="/Shop?category=makeup-beauty" class="category-nav-link">Makeup</a></li>
+                    <li><a href="/Shop?category=clothes-wear" class="category-nav-link">Clothes</a></li>
+                    <li><a href="/Shop?category=bags-purses" class="category-nav-link">Bags</a></li>
+                    <li><a asp-controller="CustomOrders" asp-action="Create" class="category-nav-link" style="color: var(--brand-rose); font-weight: 600;">Custom Order</a></li>
+                    <li><a asp-controller="OrderTracking" asp-action="Index" class="category-nav-link text-muted">Track Order</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Notification Messages -->
+    <div class="container">
+        <partial name="_NotificationPartial" />
+    </div>
+
+    <!-- Main Content Body -->
+    <main role="main" class="flex-grow-1 pb-5">
+        @RenderBody()
+    </main>
+
+    <!-- Why Shop With Us Trust Badges -->
+    <section class="features-section">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-6 col-md-3">
+                    <div class="feature-box">
+                        <div class="feature-icon-wrap">
+                            <i class="bi bi-heart-pulse"></i>
+                        </div>
+                        <div>
+                            <h4 class="feature-title">Handmade With Love</h4>
+                            <p class="feature-desc">100% authentic artisan crafts</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="feature-box">
+                        <div class="feature-icon-wrap">
+                            <i class="bi bi-truck"></i>
+                        </div>
+                        <div>
+                            <h4 class="feature-title">Dhaka City Delivery</h4>
+                            <p class="feature-desc">Delivering across Dhaka only</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="feature-box">
+                        <div class="feature-icon-wrap">
+                            <i class="bi bi-cash-coin"></i>
+                        </div>
+                        <div>
+                            <h4 class="feature-title">Cash on Delivery</h4>
+                            <p class="feature-desc">Pay at your doorstep or bKash</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="feature-box">
+                        <div class="feature-icon-wrap">
+                            <i class="bi bi-shield-check"></i>
+                        </div>
+                        <div>
+                            <h4 class="feature-title">Verified Quality</h4>
+                            <p class="feature-desc">Fresh food & safe packaging</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Site Footer -->
+    <footer class="site-footer">
+        <div class="container">
+            <div class="row g-4">
+                <!-- Col 1: Brand Info -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <img src="~/images/branding/logo.jpg" alt="AarMaabd Logo" style="width: 42px; height: 42px; border-radius: 50%;" />
+                        <span class="brand-title" style="font-size: 1.5rem;">AarMaabd</span>
+                    </div>
+                    <p class="text-muted pe-lg-4" style="font-size: 0.9rem;">
+                        Your trusted destination for handmade crochet accessories, freshly baked cakes & savories, aesthetic resin arts, gypsum home decor, and personalized gifts. Handcrafted with passion in Bangladesh.
+                    </p>
+                    <div class="d-flex gap-3 mt-3">
+                        <a href="https://facebook.com" target="_blank" class="header-icon-btn" style="background: var(--brand-blush);" title="Facebook">
+                            <i class="bi bi-facebook" style="color: var(--brand-rose);"></i>
+                        </a>
+                        <a href="https://instagram.com" target="_blank" class="header-icon-btn" style="background: var(--brand-blush);" title="Instagram">
+                            <i class="bi bi-instagram" style="color: var(--brand-rose);"></i>
+                        </a>
+                        <a href="https://wa.me/8801700000000" target="_blank" class="header-icon-btn" style="background: var(--brand-blush);" title="WhatsApp">
+                            <i class="bi bi-whatsapp" style="color: var(--brand-rose);"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Col 2: Collections -->
+                <div class="col-lg-2 col-6">
+                    <h5 class="footer-col-title">Collections</h5>
+                    <ul class="footer-links">
+                        <li><a href="/Shop?category=crochet">Crochet Bags & Wear</a></li>
+                        <li><a href="/Shop?category=cakes-desserts">Cakes & Desserts</a></li>
+                        <li><a href="/Shop?category=savory-food">Savory Food</a></li>
+                        <li><a href="/Shop?category=resin-art">Resin Keychains</a></li>
+                        <li><a href="/Shop?category=gypsum-candles">Gypsum & Candles</a></li>
+                        <li><a href="/Shop?category=jewellery-accessories">Jewellery & Churi</a></li>
+                    </ul>
+                </div>
+
+                <!-- Col 3: Customer Care -->
+                <div class="col-lg-3 col-6">
+                    <h5 class="footer-col-title">Customer Care</h5>
+                    <ul class="footer-links">
+                        <li><a asp-controller="OrderTracking" asp-action="Index">Track Your Order</a></li>
+                        <li><a asp-controller="CustomOrders" asp-action="Create">Custom Order Requests</a></li>
+                        <li><a asp-controller="Account" asp-action="Dashboard">My Account</a></li>
+                        <li><a asp-controller="Home" asp-action="About">About Us</a></li>
+                        <li><a asp-controller="Home" asp-action="Privacy">Privacy & Terms</a></li>
+                    </ul>
+                </div>
+
+                <!-- Col 4: Contact & Delivery -->
+                <div class="col-lg-3 col-md-6">
+                    <h5 class="footer-col-title">Get in Touch</h5>
+                    <div class="footer-contact-item">
+                        <i class="bi bi-geo-alt"></i>
+                        <span>Dhanmondi, Dhaka, Bangladesh</span>
+                    </div>
+                    <div class="footer-contact-item">
+                        <i class="bi bi-telephone"></i>
+                        <span>+880 1700-000000</span>
+                    </div>
+                    <div class="footer-contact-item">
+                        <i class="bi bi-envelope"></i>
+                        <span>hello@aarmaabd.com</span>
+                    </div>
+                    <div class="mt-3">
+                        <small class="text-muted d-block mb-1">Accepted Payment Methods</small>
+                        <div class="d-flex align-items-center gap-2 flex-wrap text-muted fs-6">
+                            <span class="badge bg-light text-dark border">Cash on Delivery</span>
+                            <span class="badge bg-light text-dark border">bKash</span>
+                            <span class="badge bg-light text-dark border">Nagad</span>
+                            <span class="badge bg-light text-dark border">Cards</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-bottom d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2">
+                <div>&copy; 2026 AarMaabd. All rights reserved. Designed for Bangladesh.</div>
+                <div class="d-flex gap-3">
+                    <a asp-controller="Home" asp-action="Privacy" class="text-muted">Privacy Policy</a>
+                    <a asp-controller="Home" asp-action="Contact" class="text-muted">Contact Support</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

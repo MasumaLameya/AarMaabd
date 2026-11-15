@@ -1,0 +1,107 @@
+@model AarMaabd.Models.CustomOrderRequest
+@{
+    ViewData["Title"] = $"Review Request #{Model.Id}";
+}
+
+<div class="mb-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="h3 fw-bold mb-1" style="color: var(--brand-rose);">Custom Request #@Model.Id</h1>
+            <p class="text-muted small mb-0">Submitted by <strong>@Model.CustomerName</strong> on @Model.CreatedAtUtc.ToLocalTime().ToString("dd MMMM yyyy")</p>
+        </div>
+        <a asp-action="Index" class="btn btn-outline-secondary btn-sm rounded-pill">
+            <i class="bi bi-arrow-left me-1"></i> Back to Requests
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="admin-card mb-4">
+            <h4 class="h6 fw-bold mb-3 border-bottom pb-2 text-uppercase" style="color: var(--brand-rose);">
+                Request Specifications
+            </h4>
+
+            <div class="mb-3">
+                <span class="text-muted small text-uppercase fw-bold d-block">Category:</span>
+                <span class="badge bg-light text-dark border fs-6">@Model.Category</span>
+            </div>
+
+            <div class="mb-3">
+                <span class="text-muted small text-uppercase fw-bold d-block">Customer Details & Requirements:</span>
+                <p class="p-3 bg-light rounded-3 text-dark mb-0">@Model.Description</p>
+            </div>
+
+            @if (!string.IsNullOrEmpty(Model.ReferenceImageUrl))
+            {
+                <div class="mb-3">
+                    <span class="text-muted small text-uppercase fw-bold d-block mb-1">Attached Reference Image:</span>
+                    <a href="@Model.ReferenceImageUrl" target="_blank">
+                        <img src="@Model.ReferenceImageUrl" alt="Reference Image" class="img-fluid rounded-3 border" style="max-height: 280px;" />
+                    </a>
+                </div>
+            }
+
+            <div class="row g-3 small text-muted border-top pt-3">
+                <div class="col-6">
+                    <strong>Needed By Date:</strong> @(Model.TargetDeliveryDate.HasValue ? Model.TargetDeliveryDate.Value.ToString("dd MMMM yyyy") : "No specific date")
+                </div>
+                <div class="col-6">
+                    <strong>Customer Budget:</strong> @(Model.EstimatedBudget.HasValue ? $"৳{Model.EstimatedBudget.Value:N0}" : "Unspecified")
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="admin-card">
+            <h4 class="h6 fw-bold mb-3 border-bottom pb-2 text-uppercase" style="color: var(--brand-rose);">
+                Quotation & Status Response
+            </h4>
+
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger small p-2 rounded-3 mb-3">
+                    <i class="bi bi-exclamation-triangle-fill me-1"></i> @TempData["ErrorMessage"]
+                </div>
+            }
+
+            <form asp-action="UpdateQuote" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.Id" />
+
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Request Status</label>
+                    <select name="status" class="form-select rounded-3">
+                        @foreach (AarMaabd.Models.CustomOrderStatus cs in Enum.GetValues(typeof(AarMaabd.Models.CustomOrderStatus)))
+                        {
+                            <option value="@cs" selected="@(Model.Status == cs)">@cs</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Official Quoted Price (৳ BDT)</label>
+                    <input type="number" name="quotedPrice" min="0" step="0.01" class="form-control rounded-3" value="@Model.QuotedPrice" placeholder="e.g. 1500" />
+                    <small class="text-muted">Price cannot be negative.</small>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Admin Response / Production Notes</label>
+                    <textarea name="adminNotes" rows="3" class="form-control rounded-3" placeholder="Notes for customer or production schedule...">@Model.AdminNotes</textarea>
+                </div>
+
+                <button type="submit" class="btn-aarmaabd w-100">
+                    Save Quote & Status
+                </button>
+            </form>
+
+            <div class="pt-3 mt-4 border-top">
+                <small class="text-muted d-block mb-2">Direct Communication:</small>
+                <a href="https://wa.me/@(Model.CustomerPhone.Replace("+", "").Replace(" ", ""))" target="_blank" class="btn btn-outline-success btn-sm rounded-pill w-100">
+                    <i class="bi bi-whatsapp me-1"></i> Contact via WhatsApp (@Model.CustomerPhone)
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

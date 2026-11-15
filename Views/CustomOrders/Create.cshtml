@@ -1,0 +1,75 @@
+@model AarMaabd.Models.CustomOrderRequest
+@{
+    ViewData["Title"] = "Custom Order Request - Handmade Just For You";
+}
+
+<div class="container py-5" style="max-width: 680px;">
+    <div class="text-center mb-4">
+        <span class="badge bg-white text-dark border px-3 py-1 rounded-pill mb-2 small fw-bold" style="color: var(--brand-rose) !important;">
+            <i class="bi bi-stars text-warning me-1"></i> Bespoke Artisan Service
+        </span>
+        <h1 class="h2 fw-bold" style="color: var(--brand-rose);">Custom Handcrafted Order</h1>
+        <p class="text-muted small">
+            Whether it's a personalized crochet bag, custom message bento cake, or alphabet resin keychain, tell us your vision and we'll craft it for you!
+        </p>
+    </div>
+
+    <div class="p-4 p-md-5 bg-white rounded-4 border shadow-sm">
+        <form asp-action="Create" method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="CustomerName" class="form-label small fw-bold text-uppercase">Your Name *</label>
+                    <input asp-for="CustomerName" class="form-control rounded-3" placeholder="Enter your full name" required />
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="CustomerPhone" class="form-label small fw-bold text-uppercase">Mobile Number *</label>
+                    <input asp-for="CustomerPhone" class="form-control rounded-3" placeholder="01712345678" required />
+                </div>
+
+                <div class="col-12">
+                    <label asp-for="Category" class="form-label small fw-bold text-uppercase">Item Type / Category *</label>
+                    <select asp-for="Category" class="form-select rounded-3">
+                        <option value="Crochet Items">Crochet Items (Bag, Clothes, Keychain, Doll)</option>
+                        <option value="Cakes & Bakery">Cakes & Desserts (Bento Cake, Cupcakes, Custom design)</option>
+                        <option value="Resin Crafts">Resin Art (Letter Keychain, Floral Pendant, Coasters)</option>
+                        <option value="Gypsum & Candles">Gypsum Decor & Scented Bubble Candles</option>
+                        <option value="Jewellery & Churi">Traditional Jewellery, Churi & Accessories</option>
+                        <option value="Special Hampers">Curated Gift Boxes & Hampers</option>
+                    </select>
+                </div>
+
+                <div class="col-12">
+                    <label asp-for="Description" class="form-label small fw-bold text-uppercase">Specifications & Details *</label>
+                    <textarea asp-for="Description" rows="4" class="form-control rounded-3" 
+                              placeholder="Please describe colors, dimensions, names/letters to include, cake flavors, or specific ideas..." required></textarea>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="TargetDeliveryDate" class="form-label small fw-bold text-uppercase">Needed By Date (Optional)</label>
+                    <input asp-for="TargetDeliveryDate" class="form-control rounded-3" type="date" min="@DateTime.UtcNow.AddDays(2).ToString("yyyy-MM-dd")" />
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="EstimatedBudget" class="form-label small fw-bold text-uppercase">Budget in BDT (৳ Optional)</label>
+                    <input asp-for="EstimatedBudget" type="number" min="0" step="0.01" class="form-control rounded-3" placeholder="e.g. 1200" />
+                    <span asp-validation-for="EstimatedBudget" class="text-danger small"></span>
+                </div>
+
+                <div class="col-12">
+                    <label class="form-label small fw-bold text-uppercase">Reference Image / Inspiration (Optional)</label>
+                    <input type="file" name="referenceImage" class="form-control rounded-3" accept=".jpg,.jpeg,.png,.webp" />
+                    <small class="text-muted">Upload a photo of a design, color palette, or cake design you like.</small>
+                </div>
+            </div>
+
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger small p-2 rounded-3 mt-3 mb-3"></div>
+
+            <button type="submit" class="btn-aarmaabd w-100 py-3 fs-6 mt-4">
+                <i class="bi bi-send-check me-1"></i> Submit Custom Order Request
+            </button>
+        </form>
+    </div>
+</div>
