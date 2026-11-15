@@ -24,14 +24,25 @@
         <div class="row g-3">
             <div class="col-md-8">
                 <label asp-for="Name" class="form-label small fw-bold text-uppercase">Product Name *</label>
-                <input asp-for="Name" class="form-control rounded-3" required />
+                <input asp-for="Name" id="productNameInput" class="form-control rounded-3" required />
                 <span asp-validation-for="Name" class="text-danger small"></span>
             </div>
 
             <div class="col-md-4">
-                <label asp-for="SKU" class="form-label small fw-bold text-uppercase">SKU *</label>
-                <input asp-for="SKU" class="form-control rounded-3" required />
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <label asp-for="SKU" class="form-label small fw-bold text-uppercase mb-0">SKU (Product Code)</label>
+                    <span class="badge bg-light text-primary border" style="font-size: 0.65rem;">
+                        <i class="bi bi-magic me-1"></i> Auto-Generated
+                    </span>
+                </div>
+                <div class="input-group">
+                    <input asp-for="SKU" id="skuInput" class="form-control rounded-start-3 font-monospace fw-bold" placeholder="e.g. CR-1002" />
+                    <button type="button" class="btn btn-outline-secondary rounded-end-3" onclick="generateAutoSku(true)" title="Generate New SKU">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </button>
+                </div>
                 <span asp-validation-for="SKU" class="text-danger small"></span>
+                <small class="text-muted d-block mt-1" style="font-size: 0.72rem;">Always auto-generated. You can keep or edit it.</small>
             </div>
 
             <div class="col-md-6">
@@ -188,6 +199,64 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
+        let skuManuallyEdited = false;
+
+        function getCategoryPrefix(slug) {
+            slug = (slug || '').toLowerCase();
+            if (slug.includes('crochet')) return 'CR';
+            if (slug.includes('cake') || slug.includes('dessert')) return 'CK';
+            if (slug.includes('food') || slug.includes('savory')) return 'FD';
+            if (slug.includes('candle') || slug.includes('gypsum')) return 'CN';
+            if (slug.includes('resin')) return 'RS';
+            if (slug.includes('jewel')) return 'JW';
+            if (slug.includes('beauty') || slug.includes('makeup')) return 'MB';
+            if (slug.includes('clothes') || slug.includes('wear')) return 'CL';
+            if (slug.includes('bag') || slug.includes('purse')) return 'BG';
+            if (slug.includes('gift')) return 'GF';
+            return 'AM';
+        }
+
+        function generateAutoSku(force = false) {
+            const skuInput = document.getElementById('skuInput');
+            if (!skuInput) return;
+
+            if (!force && skuManuallyEdited && skuInput.value.trim().length > 0) {
+                return;
+            }
+
+            const catSelect = document.getElementById('categorySelect');
+            const selectedOpt = catSelect?.options[catSelect.selectedIndex];
+            const catSlug = selectedOpt?.getAttribute('data-slug') || '';
+            const prefix = getCategoryPrefix(catSlug);
+
+            const nameInput = document.getElementById('productNameInput');
+            const nameVal = nameInput ? nameInput.value.trim() : '';
+
+            let middle = '';
+            if (nameVal) {
+                const words = nameVal.split(/\s+/).filter(w => w.length > 0);
+                const lettersOnlyWords = [];
+                for (const w of words) {
+                    const clean = w.replace(/[^a-zA-Z0-9]/g, '');
+                    if (clean.length > 0) lettersOnlyWords.push(clean);
+                }
+
+                if (lettersOnlyWords.length >= 2) {
+                    const w1 = lettersOnlyWords[0];
+                    const w2 = lettersOnlyWords[1];
+                    middle = (w1.charAt(0) + (w2.length > 1 ? w2.substring(0, 2) : w2)).toUpperCase();
+                } else if (lettersOnlyWords.length === 1 && lettersOnlyWords[0].length >= 2) {
+                    middle = lettersOnlyWords[0].substring(0, Math.Min(3, lettersOnlyWords[0].length)).toUpperCase();
+                }
+            }
+
+            const randomCode = Math.floor(1000 + Math.random() * 9000);
+            skuInput.value = middle ? `${prefix}-${middle}-${randomCode}` : `${prefix}-${randomCode}`;
+            if (force) {
+                skuManuallyEdited = false;
+            }
+        }
+
         function updateCategoryAttributes() {
             const categorySelect = document.getElementById('categorySelect');
             if (!categorySelect) return;
@@ -394,6 +463,18 @@
         }
 
         document.addEventListener('DOMContentLoaded', function () {
+            const skuInput = document.getElementById('skuInput');
+            if (skuInput) {
+                if (skuInput.value && skuInput.value.trim().length > 0) {
+                    skuManuallyEdited = true;
+                }
+                skuInput.addEventListener('input', function () {
+                    skuManuallyEdited = this.value.trim().length > 0;
+                });
+                if (!skuInput.value || skuInput.value.trim().length === 0) {
+                    generateAutoSku(true);
+                }
+            }
             updateCategoryAttributes();
         });
     </script>

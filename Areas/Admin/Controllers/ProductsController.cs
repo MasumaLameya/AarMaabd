@@ -50,16 +50,52 @@ namespace AarMaabd.Areas.Admin.Controllers
             var categories = await _context.Categories.Where(c => c.IsActive).OrderBy(c => c.DisplayOrder).ToListAsync();
             ViewBag.CategoriesList = categories;
             ViewBag.CategoryId = new SelectList(categories, "Id", "Name");
-            return View(new Product());
+            var defaultCatId = categories.FirstOrDefault()?.Id ?? 0;
+            var initialSku = await GenerateUniqueSkuAsync(defaultCatId, null);
+            return View(new Product { SKU = initialSku });
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Product product, IFormFile? primaryImage)
         {
-            if (string.IsNullOrWhiteSpace(product.Name) || string.IsNullOrWhiteSpace(product.SKU))
+            // Auto-generate or validate SKU
+            if (string.IsNullOrWhiteSpace(product.SKU))
             {
-                ModelState.AddModelError(string.Empty, "Product Name and SKU are required.");
+                product.SKU = await GenerateUniqueSkuAsync(product.CategoryId, product.Name);
+                ModelState.Remove(nameof(product.SKU));
+            }
+            else
+            {
+                if (await _context.Products.AnyAsync(p => p.SKU == product.SKU.Trim()))
+                {
+                    product.SKU = await GenerateUniqueSkuAsync(product.CategoryId, product.Name);
+                    ModelState.Remove(nameof(product.SKU));
+                }
+                else
+                {
+                    product.SKU = product.SKU.Trim().ToUpperInvariant();
+                    ModelState.Remove(nameof(product.SKU));
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(product.Name))
+            {
+                ModelState.AddModelError(nameof(product.Name), "Product Name is required.");
+            }
+            else if (string.IsNullOrWhiteSpace(product.Slug))
+            {
+                // Auto generate slug if empty
+                var cleanSlug = product.Name.ToLowerInvariant().Replace(" ", "-").Replace("&", "and");
+                cleanSlug = System.Text.RegularExpressions.Regex.Replace(cleanSlug, @"[^a-z0-9\-]", "");
+                var baseSlug = cleanSlug;
+                int suffix = 1;
+                while (await _context.Products.AnyAsync(p => p.Slug == cleanSlug))
+                {
+                    cleanSlug = $"{baseSlug}-{suffix++}";
+                }
+                product.Slug = cleanSlug;
+                ModelState.Remove(nameof(product.Slug));
             }
 
             if (product.Price < 0)
@@ -87,19 +123,8 @@ namespace AarMaabd.Areas.Admin.Controllers
                 ModelState.AddModelError(nameof(product.PreparationLeadDays), "Preparation lead days cannot be negative.");
             }
 
-            // SKU Uniqueness check
-            if (await _context.Products.AnyAsync(p => p.SKU == product.SKU.Trim()))
-            {
-                ModelState.AddModelError(nameof(product.SKU), "This SKU is already in use by another product.");
-            }
-
             if (ModelState.IsValid)
             {
-                // Auto generate slug if empty
-                if (string.IsNullOrWhiteSpace(product.Slug))
-                {
-                    product.Slug = product.Name.ToLowerInvariant().Replace(" ", "-").Replace("&", "and");
-                }
 
                 if (primaryImage != null && primaryImage.Length > 0)
                 {
@@ -192,6 +217,40 @@ namespace AarMaabd.Areas.Admin.Controllers
                 .FirstOrDefaultAsync(p => p.Id == id);
 
             if (product == null) return NotFound();
+
+            // Auto-generate or validate SKU on Edit
+            if (string.IsNullOrWhiteSpace(model.SKU))
+            {
+                model.SKU = await GenerateUniqueSkuAsync(model.CategoryId, model.Name);
+                ModelState.Remove(nameof(model.SKU));
+            }
+            else
+            {
+                if (await _context.Products.AnyAsync(p => p.Id != id && p.SKU == model.SKU.Trim()))
+                {
+                    model.SKU = await GenerateUniqueSkuAsync(model.CategoryId, model.Name);
+                    ModelState.Remove(nameof(model.SKU));
+                }
+                else
+                {
+                    model.SKU = model.SKU.Trim().ToUpperInvariant();
+                    ModelState.Remove(nameof(model.SKU));
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(model.Slug) && !string.IsNullOrWhiteSpace(model.Name))
+            {
+                var cleanSlug = model.Name.ToLowerInvariant().Replace(" ", "-").Replace("&", "and");
+                cleanSlug = System.Text.RegularExpressions.Regex.Replace(cleanSlug, @"[^a-z0-9\-]", "");
+                var baseSlug = cleanSlug;
+                int suffix = 1;
+                while (await _context.Products.AnyAsync(p => p.Id != id && p.Slug == cleanSlug))
+                {
+                    cleanSlug = $"{baseSlug}-{suffix++}";
+                }
+                model.Slug = cleanSlug;
+                ModelState.Remove(nameof(model.Slug));
+            }
 
             if (model.Price < 0)
             {
@@ -324,6 +383,67 @@ namespace AarMaabd.Areas.Admin.Controllers
             {
                 product.AvailableColors = null;
             }
+        }
+
+        private async Task<string> GenerateUniqueSkuAsync(int categoryId, string? productName)
+        {
+            var category = await _context.Categories.FindAsync(categoryId);
+            var slug = category?.Slug?.ToLowerInvariant() ?? "";
+
+            string prefix = "AM";
+            if (slug.Contains("crochet")) prefix = "CR";
+            else if (slug.Contains("cake") || slug.Contains("dessert")) prefix = "CK";
+            else if (slug.Contains("food") || slug.Contains("savory")) prefix = "FD";
+            else if (slug.Contains("candle") || slug.Contains("gypsum")) prefix = "CN";
+            else if (slug.Contains("resin")) prefix = "RS";
+            else if (slug.Contains("jewel")) prefix = "JW";
+            else if (slug.Contains("beauty") || slug.Contains("makeup")) prefix = "MB";
+            else if (slug.Contains("clothes") || slug.Contains("wear")) prefix = "CL";
+            else if (slug.Contains("bag") || slug.Contains("purse")) prefix = "BG";
+            else if (slug.Contains("gift")) prefix = "GF";
+
+            string middle = "";
+            if (!string.IsNullOrWhiteSpace(productName))
+            {
+                var cleanWords = productName.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                var validLetters = new List<string>();
+                foreach (var word in cleanWords)
+                {
+                    var lettersOnly = new string(word.Where(c => char.IsLetterOrDigit(c) && c < 128).ToArray());
+                    if (!string.IsNullOrEmpty(lettersOnly))
+                    {
+                        validLetters.Add(lettersOnly);
+                    }
+                }
+
+                if (validLetters.Count >= 2)
+                {
+                    var w1 = validLetters[0];
+                    var w2 = validLetters[1];
+                    middle = (w1[0].ToString() + (w2.Length > 1 ? w2.Substring(0, 2) : w2)).ToUpperInvariant();
+                }
+                else if (validLetters.Count == 1 && validLetters[0].Length >= 2)
+                {
+                    middle = validLetters[0].Substring(0, Math.Min(3, validLetters[0].Length)).ToUpperInvariant();
+                }
+            }
+
+            var random = new Random();
+            string candidateSku;
+            int attempts = 0;
+            do
+            {
+                int code = random.Next(1000, 9999);
+                candidateSku = string.IsNullOrEmpty(middle) ? $"{prefix}-{code}" : $"{prefix}-{middle}-{code}";
+                attempts++;
+                if (attempts > 50)
+                {
+                    candidateSku = $"{prefix}-{DateTime.UtcNow:yyMMddHHmmss}";
+                    break;
+                }
+            } while (await _context.Products.AnyAsync(p => p.SKU == candidateSku));
+
+            return candidateSku;
         }
 
         [HttpPost]
