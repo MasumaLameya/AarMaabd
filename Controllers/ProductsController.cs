@@ -17,17 +17,32 @@ namespace AarMaabd.Controllers
         }
 
         [Route("product/{slug}")]
-        public async Task<IActionResult> Details(string slug)
+        [Route("Products/Details/{id:int}")]
+        [Route("Products/Details")]
+        public async Task<IActionResult> Details(string? slug, int? id)
         {
-            if (string.IsNullOrWhiteSpace(slug)) return NotFound();
+            Product? product = null;
 
-            var product = await _context.Products
-                .Include(p => p.Images.OrderBy(i => i.DisplayOrder))
-                .Include(p => p.Variants.Where(v => v.IsActive))
-                .Include(p => p.Category)
-                .Include(p => p.SubCategory)
-                .Include(p => p.Reviews.Where(r => r.IsApproved).OrderByDescending(r => r.CreatedAtUtc))
-                .FirstOrDefaultAsync(p => p.Slug == slug && p.IsActive);
+            if (!string.IsNullOrWhiteSpace(slug))
+            {
+                product = await _context.Products
+                    .Include(p => p.Images.OrderBy(i => i.DisplayOrder))
+                    .Include(p => p.Variants.Where(v => v.IsActive))
+                    .Include(p => p.Category)
+                    .Include(p => p.SubCategory)
+                    .Include(p => p.Reviews.Where(r => r.IsApproved).OrderByDescending(r => r.CreatedAtUtc))
+                    .FirstOrDefaultAsync(p => p.Slug == slug && p.IsActive);
+            }
+            else if (id.HasValue)
+            {
+                product = await _context.Products
+                    .Include(p => p.Images.OrderBy(i => i.DisplayOrder))
+                    .Include(p => p.Variants.Where(v => v.IsActive))
+                    .Include(p => p.Category)
+                    .Include(p => p.SubCategory)
+                    .Include(p => p.Reviews.Where(r => r.IsApproved).OrderByDescending(r => r.CreatedAtUtc))
+                    .FirstOrDefaultAsync(p => p.Id == id.Value && p.IsActive);
+            }
 
             if (product == null) return NotFound();
 
