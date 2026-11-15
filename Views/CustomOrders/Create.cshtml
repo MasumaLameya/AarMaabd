@@ -31,7 +31,7 @@
 
                 <div class="col-12">
                     <label asp-for="Category" class="form-label small fw-bold text-uppercase">Item Type / Category *</label>
-                    <select asp-for="Category" class="form-select rounded-3">
+                    <select asp-for="Category" class="form-select rounded-3" id="customCategorySelect" onchange="updateCustomOrderHints()">
                         <option value="Crochet Items">Crochet Items (Bag, Clothes, Keychain, Doll)</option>
                         <option value="Cakes & Bakery">Cakes & Desserts (Bento Cake, Cupcakes, Custom design)</option>
                         <option value="Resin Crafts">Resin Art (Letter Keychain, Floral Pendant, Coasters)</option>
@@ -43,8 +43,11 @@
 
                 <div class="col-12">
                     <label asp-for="Description" class="form-label small fw-bold text-uppercase">Specifications & Details *</label>
-                    <textarea asp-for="Description" rows="4" class="form-control rounded-3" 
-                              placeholder="Please describe colors, dimensions, names/letters to include, cake flavors, or specific ideas..." required></textarea>
+                    <textarea asp-for="Description" rows="4" class="form-control rounded-3" id="customDescTextarea"
+                              placeholder="Please describe colors, dimensions, yarn preference, or design ideas..." required></textarea>
+                    <small class="text-muted d-block mt-1" id="customCategoryHint">
+                        <i class="bi bi-info-circle me-1"></i> Specify yarn colors, dimensions, patterns, or personal touches.
+                    </small>
                 </div>
 
                 <div class="col-md-6">
@@ -73,3 +76,40 @@
         </form>
     </div>
 </div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function updateCustomOrderHints() {
+            const select = document.getElementById('customCategorySelect');
+            const textarea = document.getElementById('customDescTextarea');
+            const hint = document.getElementById('customCategoryHint');
+            if (!select || !textarea || !hint) return;
+
+            const val = select.value;
+            if (val.includes("Cakes") || val.includes("Bakery")) {
+                textarea.placeholder = "e.g. Vanilla sponge with chocolate ganache, 1 pound bento cake, message 'Happy Birthday Lamia', pastel pink theme...";
+                hint.innerHTML = '<i class="bi bi-cake2 text-warning me-1"></i> Mention preferred flavor, size/pound, message on cake, and celebration date.';
+            } else if (val.includes("Crochet")) {
+                textarea.placeholder = "e.g. Butterfly pattern cardigan in lilac & cream, size Medium, shoulder bag 10x8 inch, cotton yarn...";
+                hint.innerHTML = '<i class="bi bi-handbag text-danger me-1"></i> Specify desired yarn colors, measurements/size, bag handle type, or pattern.';
+            } else if (val.includes("Resin")) {
+                textarea.placeholder = "e.g. Letter 'M' keychain with gold flakes & baby pink dried roses, clear glossy finish, gold keychain ring...";
+                hint.innerHTML = '<i class="bi bi-gem text-info me-1"></i> Mention letter/name, real flower colors, gold/silver foil, or pendant style.';
+            } else if (val.includes("Candles") || val.includes("Gypsum")) {
+                textarea.placeholder = "e.g. Bubble candle with French Vanilla scent, matching ribbed oval tray in terrazzo white...";
+                hint.innerHTML = '<i class="bi bi-fire text-warning me-1"></i> Specify candle scent, color theme, and tray dimensions or shapes.';
+            } else if (val.includes("Jewellery") || val.includes("Churi")) {
+                textarea.placeholder = "e.g. Velvet bangles size 2.6 in maroon with pearl work, matching choker necklace for wedding...";
+                hint.innerHTML = '<i class="bi bi-stars text-primary me-1"></i> Specify bangle size (2.4, 2.6, 2.8), metal/silk thread color, and accessories.';
+            } else {
+                textarea.placeholder = "e.g. Special anniversary gift box with handwritten card, mini candle, resin keychain, and bento cake...";
+                hint.innerHTML = '<i class="bi bi-gift text-primary me-1"></i> Describe what items you would like included inside the custom hamper box.';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            updateCustomOrderHints();
+        });
+    </script>
+}

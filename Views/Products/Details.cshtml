@@ -1,6 +1,10 @@
 @model AarMaabd.ViewModels.ProductDetailsViewModel
 @{
     ViewData["Title"] = Model.Product.Name;
+    var catSlug = Model.Product.Category?.Slug?.ToLowerInvariant() ?? "";
+    bool isFoodCat = catSlug == "cakes-desserts" || catSlug == "savory-food";
+    bool isCandleCat = catSlug == "gypsum-candles";
+    bool isBeautyCat = catSlug == "makeup-beauty";
 }
 
 <div class="container py-4">
@@ -124,19 +128,65 @@
                     </div>
                 }
 
-                <!-- Available Colors / Flavors Display -->
-                @if (!string.IsNullOrEmpty(Model.Product.AvailableFlavors))
+
+
+                <!-- Available Colors / Flavors / Sizes Display -->
+                @if (isFoodCat && !string.IsNullOrEmpty(Model.Product.AvailableFlavors))
                 {
                     <div class="mb-3">
-                        <span class="fw-bold small text-uppercase text-muted d-block mb-1">Available Flavors:</span>
-                        <span class="badge bg-white text-dark border me-1">@Model.Product.AvailableFlavors</span>
+                        <span class="fw-bold small text-uppercase text-muted d-block mb-1">
+                            <i class="bi bi-cake2 me-1" style="color: var(--brand-rose);"></i> Available Flavors:
+                        </span>
+                        <div class="d-flex flex-wrap gap-1">
+                            @foreach (var flavor in Model.Product.AvailableFlavors.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                            {
+                                <span class="badge bg-white text-dark border px-2 py-1 rounded-pill">@flavor</span>
+                            }
+                        </div>
                     </div>
                 }
+                else if (isCandleCat && !string.IsNullOrEmpty(Model.Product.AvailableFlavors))
+                {
+                    <div class="mb-3">
+                        <span class="fw-bold small text-uppercase text-muted d-block mb-1">
+                            <i class="bi bi-fire me-1 text-warning"></i> Available Scents / Fragrance:
+                        </span>
+                        <div class="d-flex flex-wrap gap-1">
+                            @foreach (var scent in Model.Product.AvailableFlavors.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                            {
+                                <span class="badge bg-white text-dark border px-2 py-1 rounded-pill">@scent</span>
+                            }
+                        </div>
+                    </div>
+                }
+
+                @if (!isFoodCat && !string.IsNullOrEmpty(Model.Product.AvailableColors))
+                {
+                    <div class="mb-3">
+                        <span class="fw-bold small text-uppercase text-muted d-block mb-1">
+                            <i class="bi bi-palette me-1" style="color: var(--brand-rose);"></i> Available Colors / Shades:
+                        </span>
+                        <div class="d-flex flex-wrap gap-1">
+                            @foreach (var color in Model.Product.AvailableColors.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                            {
+                                <span class="badge bg-white text-dark border px-2 py-1 rounded-pill">@color</span>
+                            }
+                        </div>
+                    </div>
+                }
+
                 @if (!string.IsNullOrEmpty(Model.Product.AvailableSizes))
                 {
                     <div class="mb-3">
-                        <span class="fw-bold small text-uppercase text-muted d-block mb-1">Size / Weight:</span>
-                        <span class="badge bg-white text-dark border me-1">@Model.Product.AvailableSizes</span>
+                        <span class="fw-bold small text-uppercase text-muted d-block mb-1">
+                            <i class="bi bi-rulers me-1 text-muted"></i> @(isFoodCat ? "Size / Weight:" : "Available Sizes / Dimensions:")
+                        </span>
+                        <div class="d-flex flex-wrap gap-1">
+                            @foreach (var size in Model.Product.AvailableSizes.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                            {
+                                <span class="badge bg-white text-dark border px-2 py-1 rounded-pill">@size</span>
+                            }
+                        </div>
                     </div>
                 }
 
@@ -181,12 +231,12 @@
                         </div>
                     </div>
 
-                    @if (!string.IsNullOrEmpty(Model.Product.Ingredients))
+                    @if ((isFoodCat || isBeautyCat) && !string.IsNullOrEmpty(Model.Product.Ingredients))
                     {
                         <div class="accordion-item">
                             <h2 class="accordion-header">
                                 <button class="accordion-button collapsed fw-bold text-dark" type="button" data-bs-toggle="collapse" data-bs-target="#ingredCollapse">
-                                    <i class="bi bi-egg me-2 text-muted"></i> Ingredients & Allergen Information
+                                    <i class="bi bi-egg me-2 text-muted"></i> @(isFoodCat ? "Ingredients & Allergen Information" : "Skin Safety & Ingredients")
                                 </button>
                             </h2>
                             <div id="ingredCollapse" class="accordion-collapse collapse">
@@ -202,7 +252,22 @@
                         <div class="accordion-item">
                             <h2 class="accordion-header">
                                 <button class="accordion-button collapsed fw-bold text-dark" type="button" data-bs-toggle="collapse" data-bs-target="#careCollapse">
-                                    <i class="bi bi-hand-thumbs-up me-2 text-muted"></i> Care & Washing Instructions
+                                    @if (isFoodCat)
+                                    {
+                                        <i class="bi bi-snow2 me-2 text-muted"></i> <span>Storage & Shelf Life Guide</span>
+                                    }
+                                    else if (isCandleCat)
+                                    {
+                                        <i class="bi bi-fire me-2 text-muted"></i> <span>Candle Safety & Burning Guide</span>
+                                    }
+                                    else if (catSlug == "crochet" || catSlug == "clothes-wear" || catSlug == "bags-purses")
+                                    {
+                                        <i class="bi bi-hand-thumbs-up me-2 text-muted"></i> <span>Care & Washing Instructions</span>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-gem me-2 text-muted"></i> <span>Care & Preservation Guide</span>
+                                    }
                                 </button>
                             </h2>
                             <div id="careCollapse" class="accordion-collapse collapse">

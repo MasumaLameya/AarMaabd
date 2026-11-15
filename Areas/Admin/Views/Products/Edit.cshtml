@@ -36,12 +36,26 @@
 
             <div class="col-md-6">
                 <label asp-for="CategoryId" class="form-label small fw-bold text-uppercase">Category *</label>
-                <select asp-for="CategoryId" class="form-select rounded-3" asp-items="ViewBag.CategoryId" required></select>
+                <select asp-for="CategoryId" class="form-select rounded-3" id="categorySelect" required onchange="updateCategoryAttributes()">
+                    @if (ViewBag.CategoriesList != null)
+                    {
+                        foreach (var cat in (IEnumerable<AarMaabd.Models.Category>)ViewBag.CategoriesList)
+                        {
+                            <option value="@cat.Id" data-slug="@cat.Slug" data-name="@cat.Name" selected="@(Model.CategoryId == cat.Id ? "selected" : null)">
+                                @cat.Name
+                            </option>
+                        }
+                    }
+                    else
+                    {
+                        <option value="">Select Category</option>
+                    }
+                </select>
             </div>
 
             <div class="col-md-6">
                 <label asp-for="ProductType" class="form-label small fw-bold text-uppercase">Product Type *</label>
-                <select asp-for="ProductType" class="form-select rounded-3">
+                <select asp-for="ProductType" class="form-select rounded-3" id="productTypeSelect">
                     <option value="@AarMaabd.Models.ProductType.ReadyStock">Ready Stock (Physical Items)</option>
                     <option value="@AarMaabd.Models.ProductType.FoodPerishable">Perishable Food (Cakes, Cookies)</option>
                     <option value="@AarMaabd.Models.ProductType.PreOrder">Pre-Order</option>
@@ -88,29 +102,54 @@
                 <textarea asp-for="Description" rows="4" class="form-control rounded-3" required></textarea>
             </div>
 
-            <div class="col-md-4">
-                <label asp-for="AvailableFlavors" class="form-label small fw-bold text-uppercase">Flavors (Cakes/Food)</label>
-                <input asp-for="AvailableFlavors" class="form-control rounded-3" />
+            <!-- Dynamic Category-Specific Attributes Section -->
+            <div class="col-12 mt-4 pt-3 border-top">
+                <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
+                    <h5 class="h6 fw-bold text-uppercase mb-0" style="color: var(--brand-rose);">
+                        <i class="bi bi-sliders2 me-1"></i> Category-Specific Options
+                    </h5>
+                    <span id="categoryAttributeBadge" class="badge bg-light text-dark border px-3 py-1 rounded-pill small">
+                        Active Category: <strong id="categoryBadgeText" style="color: var(--brand-rose);">Loading...</strong>
+                    </span>
+                </div>
+                <small class="text-muted d-block mb-3" id="categoryHelperText">
+                    Attribute options dynamically adapt to your selected category.
+                </small>
             </div>
 
-            <div class="col-md-4">
-                <label asp-for="AvailableSizes" class="form-label small fw-bold text-uppercase">Sizes / Weights</label>
-                <input asp-for="AvailableSizes" class="form-control rounded-3" />
+            <!-- Flavors (Cakes/Bakery or Scents for Candles) -->
+            <div class="col-md-4" id="flavorGroup">
+                <label asp-for="AvailableFlavors" id="flavorLabel" class="form-label small fw-bold text-uppercase">Flavors</label>
+                <input asp-for="AvailableFlavors" id="flavorInput" class="form-control rounded-3" placeholder="e.g. Vanilla, Chocolate, Red Velvet" />
+                <small class="text-muted d-block mt-1" id="flavorHint" style="font-size: 0.75rem;">Comma-separated flavors</small>
             </div>
 
-            <div class="col-md-4">
-                <label asp-for="AvailableColors" class="form-label small fw-bold text-uppercase">Colors</label>
-                <input asp-for="AvailableColors" class="form-control rounded-3" />
+            <!-- Sizes / Weights / Dimensions -->
+            <div class="col-md-4" id="sizeGroup">
+                <label asp-for="AvailableSizes" id="sizeLabel" class="form-label small fw-bold text-uppercase">Sizes / Dimensions</label>
+                <input asp-for="AvailableSizes" id="sizeInput" class="form-control rounded-3" placeholder="e.g. Small, Medium, Large" />
+                <small class="text-muted d-block mt-1" id="sizeHint" style="font-size: 0.75rem;">Comma-separated sizes or dimensions</small>
             </div>
 
-            <div class="col-md-6">
-                <label asp-for="Ingredients" class="form-label small fw-bold text-uppercase">Ingredients (Food items)</label>
-                <input asp-for="Ingredients" class="form-control rounded-3" />
+            <!-- Colors (Crochet/Resin/Clothing/Jewelry) -->
+            <div class="col-md-4" id="colorGroup">
+                <label asp-for="AvailableColors" id="colorLabel" class="form-label small fw-bold text-uppercase">Colors / Shades</label>
+                <input asp-for="AvailableColors" id="colorInput" class="form-control rounded-3" placeholder="e.g. Pastel Pink, Ivory, Lavender" />
+                <small class="text-muted d-block mt-1" id="colorHint" style="font-size: 0.75rem;">Comma-separated colors</small>
             </div>
 
-            <div class="col-md-6">
-                <label asp-for="CareInstructions" class="form-label small fw-bold text-uppercase">Care Instructions</label>
-                <input asp-for="CareInstructions" class="form-control rounded-3" />
+            <!-- Ingredients (Food items) -->
+            <div class="col-md-6" id="ingredientGroup">
+                <label asp-for="Ingredients" id="ingredientLabel" class="form-label small fw-bold text-uppercase">Ingredients & Allergen Info</label>
+                <input asp-for="Ingredients" id="ingredientInput" class="form-control rounded-3" placeholder="Flour, Butter, Sugar, Dairy cream..." />
+                <small class="text-muted d-block mt-1" style="font-size: 0.75rem;">Food ingredients or recipe components</small>
+            </div>
+
+            <!-- Care Instructions / Storage -->
+            <div class="col-md-6" id="careGroup">
+                <label asp-for="CareInstructions" id="careLabel" class="form-label small fw-bold text-uppercase">Care Instructions</label>
+                <input asp-for="CareInstructions" id="careInput" class="form-control rounded-3" placeholder="Washing guide, heat warning, storage..." />
+                <small class="text-muted d-block mt-1" id="careHint" style="font-size: 0.75rem;">Handling or maintenance guide for customer</small>
             </div>
 
             <div class="col-12">
@@ -145,3 +184,217 @@
         </div>
     </form>
 </div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function updateCategoryAttributes() {
+            const categorySelect = document.getElementById('categorySelect');
+            if (!categorySelect) return;
+
+            const selectedOption = categorySelect.options[categorySelect.selectedIndex];
+            if (!selectedOption) return;
+
+            const slug = (selectedOption.getAttribute('data-slug') || '').toLowerCase();
+            const name = selectedOption.getAttribute('data-name') || selectedOption.text;
+
+            const flavorGroup = document.getElementById('flavorGroup');
+            const flavorLabel = document.getElementById('flavorLabel');
+            const flavorInput = document.getElementById('flavorInput');
+            const flavorHint = document.getElementById('flavorHint');
+
+            const sizeGroup = document.getElementById('sizeGroup');
+            const sizeLabel = document.getElementById('sizeLabel');
+            const sizeInput = document.getElementById('sizeInput');
+            const sizeHint = document.getElementById('sizeHint');
+
+            const colorGroup = document.getElementById('colorGroup');
+            const colorLabel = document.getElementById('colorLabel');
+            const colorInput = document.getElementById('colorInput');
+
+            const ingredientGroup = document.getElementById('ingredientGroup');
+            const ingredientLabel = document.getElementById('ingredientLabel');
+            const ingredientInput = document.getElementById('ingredientInput');
+
+            const careGroup = document.getElementById('careGroup');
+            const careLabel = document.getElementById('careLabel');
+            const careInput = document.getElementById('careInput');
+            const careHint = document.getElementById('careHint');
+
+            const badgeText = document.getElementById('categoryBadgeText');
+            const helperText = document.getElementById('categoryHelperText');
+
+            if (badgeText) badgeText.innerText = name;
+
+            const isFood = slug === 'cakes-desserts' || slug === 'savory-food';
+            const isCrochetOrApparel = slug === 'crochet' || slug === 'clothes-wear' || slug === 'bags-purses';
+            const isResinOrJewelry = slug === 'resin-art' || slug === 'jewellery-accessories';
+            const isCandle = slug === 'gypsum-candles';
+            const isBeauty = slug === 'makeup-beauty';
+
+            if (isFood) {
+                if (helperText) helperText.innerHTML = '<i class="bi bi-cake2 text-warning me-1"></i> <strong>Food & Bakery:</strong> Flavors and ingredients are active. Colors are hidden.';
+                
+                // Flavors: SHOW
+                flavorGroup.style.display = 'block';
+                flavorLabel.innerText = 'Flavors (Cakes & Bakery) *';
+                flavorInput.placeholder = 'e.g. Vanilla Bean, Belgian Chocolate, Red Velvet, Salted Caramel';
+                flavorHint.innerText = 'Flavors customer can choose from';
+
+                // Sizes -> Cake Portion/Weight
+                sizeGroup.style.display = 'block';
+                sizeLabel.innerText = 'Cake Size / Portion / Weight';
+                sizeInput.placeholder = 'e.g. 1 lb, 2 lbs, 6 pcs box, 4-inch Bento';
+                sizeHint.innerText = 'Available weight, portion or diameter';
+
+                // Colors: HIDE
+                colorGroup.style.display = 'none';
+
+                // Ingredients: SHOW
+                ingredientGroup.style.display = 'block';
+                ingredientLabel.innerText = 'Ingredients & Allergen Info';
+                ingredientInput.placeholder = 'Flour, Butter, Eggs, Sugar, Dairy cream, Nuts...';
+
+                // Care -> Storage
+                careGroup.style.display = 'block';
+                careLabel.innerText = 'Storage & Shelf Life';
+                careInput.placeholder = 'e.g. Keep refrigerated at 4°C, consume within 3 days';
+                careHint.innerText = 'Freshness & storage guide';
+            } 
+            else if (isCrochetOrApparel) {
+                if (helperText) helperText.innerHTML = '<i class="bi bi-handbag text-danger me-1"></i> <strong>Apparel & Crochet:</strong> Sizes, colors and washing care are active. Flavors & ingredients are hidden.';
+                
+                // Flavors: HIDE
+                flavorGroup.style.display = 'none';
+
+                // Ingredients: HIDE
+                ingredientGroup.style.display = 'none';
+
+                // Sizes: SHOW
+                sizeGroup.style.display = 'block';
+                sizeLabel.innerText = 'Sizes / Dimensions';
+                sizeInput.placeholder = 'e.g. Small, Medium, Large, XL, Free Size or 12"x10"';
+                sizeHint.innerText = 'Available clothing sizes or bag dimensions';
+
+                // Colors: SHOW
+                colorGroup.style.display = 'block';
+                colorLabel.innerText = 'Available Colors / Yarn Shades';
+                colorInput.placeholder = 'e.g. Pastel Pink, Sage Green, Lavender, Off-White, Black';
+
+                // Care: SHOW
+                careGroup.style.display = 'block';
+                careLabel.innerText = 'Care & Washing Instructions';
+                careInput.placeholder = 'e.g. Gentle hand wash in cool water with mild detergent; dry flat';
+                careHint.innerText = 'Washing and fabric care advice';
+            }
+            else if (isResinOrJewelry) {
+                if (helperText) helperText.innerHTML = '<i class="bi bi-gem text-info me-1"></i> <strong>Resin & Jewelry:</strong> Colors, foil tones, and preservation are active. Flavors & ingredients are hidden.';
+                
+                // Flavors: HIDE
+                flavorGroup.style.display = 'none';
+
+                // Ingredients: HIDE
+                ingredientGroup.style.display = 'none';
+
+                // Sizes: SHOW
+                sizeGroup.style.display = 'block';
+                sizeLabel.innerText = 'Sizes / Letters / Dimensions';
+                sizeInput.placeholder = 'e.g. Letter A to Z, 2 inch, 4 inch, Standard, Free size';
+                sizeHint.innerText = 'Letter choices, pendant sizes, or dimensions';
+
+                // Colors: SHOW
+                colorGroup.style.display = 'block';
+                colorLabel.innerText = 'Colors & Foil Tones';
+                colorInput.placeholder = 'e.g. Rose Gold, 24k Gold Foil, Emerald Green, Crystal Clear';
+
+                // Care: SHOW
+                careGroup.style.display = 'block';
+                careLabel.innerText = 'Care & Preservation Instructions';
+                careInput.placeholder = 'e.g. Avoid direct heat, perfume and chemicals; wipe with soft cloth';
+                careHint.innerText = 'Resin/jewelry maintenance guidelines';
+            }
+            else if (isCandle) {
+                if (helperText) helperText.innerHTML = '<i class="bi bi-fire text-warning me-1"></i> <strong>Candles & Gypsum:</strong> Scents, colors, and safety guides are active.';
+                
+                // Flavors -> Scents
+                flavorGroup.style.display = 'block';
+                flavorLabel.innerText = 'Available Scents / Fragrances';
+                flavorInput.placeholder = 'e.g. French Vanilla, Lavender Blossom, Wild Rose, Fresh Linen';
+                flavorHint.innerText = 'Available fragrance choices';
+
+                // Sizes: SHOW
+                sizeGroup.style.display = 'block';
+                sizeLabel.innerText = 'Dimensions / Net Weight';
+                sizeInput.placeholder = 'e.g. 6x6 cm, 150g, 250g';
+                sizeHint.innerText = 'Candle weight or gypsum tray dimensions';
+
+                // Colors: SHOW
+                colorGroup.style.display = 'block';
+                colorLabel.innerText = 'Colors / Aesthetic Finish';
+                colorInput.placeholder = 'e.g. Marble White, Pastel Lilac, Terrazzo, Blush Pink';
+
+                // Ingredients: HIDE
+                ingredientGroup.style.display = 'none';
+
+                // Care: SHOW
+                careGroup.style.display = 'block';
+                careLabel.innerText = 'Candle Safety & Burning Guide';
+                careInput.placeholder = 'e.g. Trim wick to 1/4" before lighting; burn on heat-resistant tray; keep dry';
+                careHint.innerText = 'Safety guidelines for candles and gypsum';
+            }
+            else if (isBeauty) {
+                if (helperText) helperText.innerHTML = '<i class="bi bi-heart text-danger me-1"></i> <strong>Makeup & Beauty:</strong> Shades, skin safety ingredients, and storage are active.';
+                
+                // Flavors: HIDE
+                flavorGroup.style.display = 'none';
+
+                // Colors -> Shades
+                colorGroup.style.display = 'block';
+                colorLabel.innerText = 'Available Shades / Tints';
+                colorInput.placeholder = 'e.g. Cherry Red, Berry Pink, Nude, Coral';
+
+                // Sizes -> Volume
+                sizeGroup.style.display = 'block';
+                sizeLabel.innerText = 'Volume / Net Weight';
+                sizeInput.placeholder = 'e.g. 5ml, 10ml, 30g';
+                sizeHint.innerText = 'Liquid volume or bottle size';
+
+                // Ingredients: SHOW
+                ingredientGroup.style.display = 'block';
+                ingredientLabel.innerText = 'Ingredients & Skin Safety';
+                ingredientInput.placeholder = 'e.g. Organic Jojoba Oil, Vitamin E, Shea Butter, Cruelty-free';
+
+                // Care: SHOW
+                careGroup.style.display = 'block';
+                careLabel.innerText = 'Storage & Usage Instructions';
+                careInput.placeholder = 'e.g. Store in a cool dry place; patch test recommended before use';
+                careHint.innerText = 'Skin application and storage guide';
+            }
+            else {
+                // Default / Gifts & Combos
+                if (helperText) helperText.innerHTML = '<i class="bi bi-gift text-primary me-1"></i> <strong>Gift Sets & Combos:</strong> Hamper sizes and theme colors active.';
+                
+                flavorGroup.style.display = 'none';
+                ingredientGroup.style.display = 'none';
+
+                sizeGroup.style.display = 'block';
+                sizeLabel.innerText = 'Hamper Box Size / Tier';
+                sizeInput.placeholder = 'e.g. Standard Box, Luxury Hamper, Mini Delight';
+                sizeHint.innerText = 'Size or bundle variant';
+
+                colorGroup.style.display = 'block';
+                colorLabel.innerText = 'Theme / Color Palette';
+                colorInput.placeholder = 'e.g. Rose Gold Theme, Royal Pink, Classic Black';
+
+                careGroup.style.display = 'block';
+                careLabel.innerText = 'Handling & Care Notes';
+                careInput.placeholder = 'e.g. Contains fragile handcrafted items; handle with care';
+                careHint.innerText = 'General handling instructions';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            updateCategoryAttributes();
+        });
+    </script>
+}

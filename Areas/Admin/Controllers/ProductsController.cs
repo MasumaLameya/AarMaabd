@@ -47,7 +47,9 @@ namespace AarMaabd.Areas.Admin.Controllers
         [HttpGet]
         public async Task<IActionResult> Create()
         {
-            ViewBag.CategoryId = new SelectList(await _context.Categories.Where(c => c.IsActive).ToListAsync(), "Id", "Name");
+            var categories = await _context.Categories.Where(c => c.IsActive).OrderBy(c => c.DisplayOrder).ToListAsync();
+            ViewBag.CategoriesList = categories;
+            ViewBag.CategoryId = new SelectList(categories, "Id", "Name");
             return View(new Product());
         }
 
@@ -149,6 +151,7 @@ namespace AarMaabd.Areas.Admin.Controllers
                 }
 
                 product.CreatedAtUtc = DateTime.UtcNow;
+                await SanitizeProductAttributesByCategoryAsync(product);
                 await _context.Products.AddAsync(product);
                 await _context.SaveChangesAsync();
 
@@ -156,7 +159,9 @@ namespace AarMaabd.Areas.Admin.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            ViewBag.CategoryId = new SelectList(await _context.Categories.Where(c => c.IsActive).ToListAsync(), "Id", "Name", product.CategoryId);
+            var allCats = await _context.Categories.Where(c => c.IsActive).OrderBy(c => c.DisplayOrder).ToListAsync();
+            ViewBag.CategoriesList = allCats;
+            ViewBag.CategoryId = new SelectList(allCats, "Id", "Name", product.CategoryId);
             return View(product);
         }
 
@@ -170,7 +175,9 @@ namespace AarMaabd.Areas.Admin.Controllers
 
             if (product == null) return NotFound();
 
-            ViewBag.CategoryId = new SelectList(await _context.Categories.Where(c => c.IsActive).ToListAsync(), "Id", "Name", product.CategoryId);
+            var categories = await _context.Categories.Where(c => c.IsActive).OrderBy(c => c.DisplayOrder).ToListAsync();
+            ViewBag.CategoriesList = categories;
+            ViewBag.CategoryId = new SelectList(categories, "Id", "Name", product.CategoryId);
             return View(product);
         }
 
@@ -277,13 +284,46 @@ namespace AarMaabd.Areas.Admin.Controllers
                     });
                 }
 
+                await SanitizeProductAttributesByCategoryAsync(product);
                 await _context.SaveChangesAsync();
                 TempData["SuccessMessage"] = $"Product '{product.Name}' updated successfully!";
                 return RedirectToAction(nameof(Index));
             }
 
-            ViewBag.CategoryId = new SelectList(await _context.Categories.Where(c => c.IsActive).ToListAsync(), "Id", "Name", model.CategoryId);
+            var allCategories = await _context.Categories.Where(c => c.IsActive).OrderBy(c => c.DisplayOrder).ToListAsync();
+            ViewBag.CategoriesList = allCategories;
+            ViewBag.CategoryId = new SelectList(allCategories, "Id", "Name", model.CategoryId);
             return View(model);
+        }
+
+        private async Task SanitizeProductAttributesByCategoryAsync(Product product)
+        {
+            var category = await _context.Categories.FindAsync(product.CategoryId);
+            if (category == null) return;
+
+            var slug = category.Slug.ToLowerInvariant();
+
+            bool isFood = slug == "cakes-desserts" || slug == "savory-food";
+            bool isCandle = slug == "gypsum-candles";
+            bool isBeauty = slug == "makeup-beauty";
+
+            // Flavors: Only Food and Candles (as scents)
+            if (!isFood && !isCandle)
+            {
+                product.AvailableFlavors = null;
+            }
+
+            // Ingredients: Only Food and Beauty
+            if (!isFood && !isBeauty)
+            {
+                product.Ingredients = null;
+            }
+
+            // Colors: Everything except food items
+            if (isFood)
+            {
+                product.AvailableColors = null;
+            }
         }
 
         [HttpPost]
