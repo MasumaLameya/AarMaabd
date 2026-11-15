@@ -24,6 +24,15 @@ namespace AarMaabd.Services
 
         public async Task<OrderPlacementResult> PlaceOrderAsync(CheckoutViewModel model, string? userId)
         {
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return new OrderPlacementResult 
+                { 
+                    Success = false, 
+                    Message = "An authenticated user account is required to place an order. Please sign in or register." 
+                };
+            }
+
             var cartSummary = await _cartService.GetCartSummaryAsync(model.AppliedCouponCode, model.DeliveryZone);
             if (!cartSummary.Items.Any())
             {
@@ -135,7 +144,7 @@ namespace AarMaabd.Services
                     {
                         OrderNumber = orderNumber,
                         UserId = userId,
-                        IsGuestOrder = string.IsNullOrEmpty(userId),
+                        IsGuestOrder = false,
                         CustomerName = model.CustomerName,
                         CustomerPhone = model.CustomerPhone,
                         CustomerEmail = model.CustomerEmail,

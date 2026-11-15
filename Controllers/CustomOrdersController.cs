@@ -1,23 +1,41 @@
 using AarMaabd.Data;
 using AarMaabd.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
 namespace AarMaabd.Controllers
 {
+    [Authorize]
     public class CustomOrdersController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public CustomOrdersController(ApplicationDbContext context)
+        public CustomOrdersController(
+            ApplicationDbContext context,
+            UserManager<ApplicationUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         [HttpGet]
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            return View(new CustomOrderRequest());
+            var model = new CustomOrderRequest();
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user != null)
+                {
+                    model.CustomerName = user.FullName;
+                    model.CustomerEmail = user.Email;
+                    model.CustomerPhone = user.PhoneNumber ?? string.Empty;
+                }
+            }
+            return View(model);
         }
 
         [HttpPost]

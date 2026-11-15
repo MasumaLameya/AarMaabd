@@ -86,13 +86,17 @@ namespace AarMaabd.Controllers
         }
 
         [HttpGet]
-        public IActionResult Register()
+        public IActionResult Register(string? returnUrl = null)
         {
             if (User.Identity?.IsAuthenticated == true)
             {
+                if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                {
+                    return Redirect(returnUrl);
+                }
                 return RedirectToAction("Dashboard");
             }
-            return View(new RegisterViewModel());
+            return View(new RegisterViewModel { ReturnUrl = returnUrl });
         }
 
         [HttpPost]
@@ -131,6 +135,10 @@ namespace AarMaabd.Controllers
                 await _cartService.MigrateGuestCartToUserAsync(user.Id);
 
                 TempData["SuccessMessage"] = "Welcome to AarMaabd! Your account has been created.";
+                if (!string.IsNullOrEmpty(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl))
+                {
+                    return Redirect(model.ReturnUrl);
+                }
                 return RedirectToAction("Dashboard");
             }
 

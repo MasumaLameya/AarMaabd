@@ -56,6 +56,8 @@ namespace AarMaabd.ViewModels
 
         [Display(Name = "Street Address")]
         public string? StreetAddress { get; set; }
+
+        public string? ReturnUrl { get; set; }
     }
 
     public class CustomerDashboardViewModel

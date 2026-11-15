@@ -35,7 +35,14 @@ namespace AarMaabd.Services
                 return existingSessionId;
             }
 
+            if (httpContext.Items.TryGetValue(CartSessionCookieKey, out var cachedSessionId) 
+                && cachedSessionId is string cachedStr && !string.IsNullOrWhiteSpace(cachedStr))
+            {
+                return cachedStr;
+            }
+
             var newSessionId = Guid.NewGuid().ToString("N");
+            httpContext.Items[CartSessionCookieKey] = newSessionId;
             httpContext.Response.Cookies.Append(CartSessionCookieKey, newSessionId, new CookieOptions
             {
                 HttpOnly = true,

@@ -11,8 +11,17 @@
             <p class="text-muted small">Create an account for personalized shopping & order tracking</p>
         </div>
 
+        @if (!string.IsNullOrEmpty(Model.ReturnUrl) && Model.ReturnUrl.Contains("Checkout", StringComparison.OrdinalIgnoreCase))
+        {
+            <div class="alert alert-warning border-0 rounded-3 small mb-4 text-center">
+                <i class="bi bi-shield-lock-fill me-1"></i>
+                <strong>Create your account to complete your order seamlessly.</strong>
+            </div>
+        }
+
         <form asp-action="Register" method="post">
             @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="ReturnUrl" />
 
             <div class="row g-3">
                 <div class="col-12">
@@ -74,7 +83,7 @@
 
         <div class="text-center mt-4 pt-3 border-top small text-muted">
             Already have an account? 
-            <a asp-action="Login" class="fw-bold" style="color: var(--brand-rose);">Sign In</a>
+            <a asp-action="Login" asp-route-returnUrl="@Model.ReturnUrl" class="fw-bold" style="color: var(--brand-rose);">Sign In</a>
         </div>
     </div>
 </div>

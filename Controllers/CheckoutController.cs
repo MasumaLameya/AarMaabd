@@ -1,12 +1,14 @@
 using AarMaabd.Models;
 using AarMaabd.Services.Interfaces;
 using AarMaabd.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
 namespace AarMaabd.Controllers
 {
+    [Authorize]
     public class CheckoutController : Controller
     {
         private readonly ICartService _cartService;
@@ -77,6 +79,11 @@ namespace AarMaabd.Controllers
             }
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Challenge();
+            }
+
             var result = await _orderService.PlaceOrderAsync(model, userId);
 
             if (!result.Success || result.Order == null)
