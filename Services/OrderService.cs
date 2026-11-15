@@ -30,175 +30,179 @@ namespace AarMaabd.Services
                 return new OrderPlacementResult { Success = false, Message = "Your shopping cart is currently empty." };
             }
 
-            // Begin atomic transaction
-            using var transaction = await _context.Database.BeginTransactionAsync();
-            try
+            var strategy = _context.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
             {
-                decimal recomputedSubTotal = 0.00m;
-                var orderItems = new List<OrderItem>();
-
-                // Atomically verify stock and build snapshot
-                foreach (var cartItem in cartSummary.Items)
+                // Begin atomic transaction
+                using var transaction = await _context.Database.BeginTransactionAsync();
+                try
                 {
-                    var product = await _context.Products
-                        .Include(p => p.Images)
-                        .FirstOrDefaultAsync(p => p.Id == cartItem.ProductId);
+                    decimal recomputedSubTotal = 0.00m;
+                    var orderItems = new List<OrderItem>();
 
-                    if (product == null || !product.IsActive)
+                    // Atomically verify stock and build snapshot
+                    foreach (var cartItem in cartSummary.Items)
+                    {
+                        var product = await _context.Products
+                            .Include(p => p.Images)
+                            .FirstOrDefaultAsync(p => p.Id == cartItem.ProductId);
+
+                        if (product == null || !product.IsActive)
+                        {
+                            await transaction.RollbackAsync();
+                            return new OrderPlacementResult 
+                            { 
+                                Success = false, 
+                                Message = $"The item '{cartItem.ProductName}' is no longer available." 
+                            };
+                        }
+
+                        if (product.ProductType == ProductType.ReadyStock && product.StockQuantity < cartItem.Quantity)
+                        {
+                            await transaction.RollbackAsync();
+                            return new OrderPlacementResult 
+                            { 
+                                Success = false, 
+                                Message = $"Sorry, only {product.StockQuantity} units of '{product.Name}' are left in stock." 
+                            };
+                        }
+
+                        // Decrement stock atomically
+                        if (product.ProductType == ProductType.ReadyStock)
+                        {
+                            product.StockQuantity -= cartItem.Quantity;
+                        }
+
+                        var effectiveUnitPrice = product.CurrentEffectivePrice;
+                        var lineTotal = effectiveUnitPrice * cartItem.Quantity;
+                        recomputedSubTotal += lineTotal;
+
+                        orderItems.Add(new OrderItem
+                        {
+                            ProductId = product.Id,
+                            ProductNameSnapshot = product.Name,
+                            SkuSnapshot = product.SKU,
+                            ImageUrlSnapshot = product.PrimaryImageUrl,
+                            VariantNameSnapshot = cartItem.VariantName,
+                            CustomizationNoteSnapshot = cartItem.CustomizationNote,
+                            UnitPriceSnapshot = effectiveUnitPrice,
+                            DiscountAppliedSnapshot = product.Price - effectiveUnitPrice,
+                            Quantity = cartItem.Quantity,
+                            LineTotal = lineTotal
+                        });
+                    }
+
+                    // Coupon evaluation
+                    decimal couponDiscount = 0.00m;
+                    int? appliedCouponId = null;
+                    if (!string.IsNullOrWhiteSpace(model.AppliedCouponCode))
+                    {
+                        var customerId = userId ?? model.CustomerPhone;
+                        var couponResult = await _promotionService.ValidateCouponAsync(model.AppliedCouponCode, recomputedSubTotal, customerId);
+                        if (couponResult.IsValid && couponResult.Coupon != null)
+                        {
+                            couponDiscount = couponResult.DiscountAmount;
+                            appliedCouponId = couponResult.Coupon.Id;
+                        }
+                    }
+
+                    // Delivery Zone validation & fee calculation: Delivery is strictly inside Dhaka only
+                    if (!string.Equals(model.Division, "Dhaka", StringComparison.OrdinalIgnoreCase) || 
+                        model.DeliveryZone == "Outside Dhaka")
                     {
                         await transaction.RollbackAsync();
-                        return new OrderPlacementResult 
-                        { 
-                            Success = false, 
-                            Message = $"The item '{cartItem.ProductName}' is no longer available." 
+                        return new OrderPlacementResult
+                        {
+                            Success = false,
+                            Message = "We currently deliver only inside Dhaka. Please select a delivery address inside Dhaka."
                         };
                     }
 
-                    if (product.ProductType == ProductType.ReadyStock && product.StockQuantity < cartItem.Quantity)
+                    model.DeliveryZone = "Inside Dhaka";
+                    decimal deliveryFee = 0.00m;
+                    if (recomputedSubTotal < 2500.00m) // Free delivery threshold
                     {
-                        await transaction.RollbackAsync();
-                        return new OrderPlacementResult 
-                        { 
-                            Success = false, 
-                            Message = $"Sorry, only {product.StockQuantity} units of '{product.Name}' are left in stock." 
-                        };
+                        deliveryFee = 70.00m;
                     }
 
-                    // Decrement stock atomically
-                    if (product.ProductType == ProductType.ReadyStock)
-                    {
-                        product.StockQuantity -= cartItem.Quantity;
-                    }
+                    decimal totalPayable = Math.Max(0, recomputedSubTotal - couponDiscount + deliveryFee);
 
-                    var effectiveUnitPrice = product.CurrentEffectivePrice;
-                    var lineTotal = effectiveUnitPrice * cartItem.Quantity;
-                    recomputedSubTotal += lineTotal;
+                    // Generate Unique Order Reference
+                    var randomPart = new Random().Next(1000, 9999);
+                    var orderNumber = $"AAR-{DateTime.UtcNow:yyyyMMdd}-{randomPart}";
 
-                    orderItems.Add(new OrderItem
+                    var order = new Order
                     {
-                        ProductId = product.Id,
-                        ProductNameSnapshot = product.Name,
-                        SkuSnapshot = product.SKU,
-                        ImageUrlSnapshot = product.PrimaryImageUrl,
-                        VariantNameSnapshot = cartItem.VariantName,
-                        CustomizationNoteSnapshot = cartItem.CustomizationNote,
-                        UnitPriceSnapshot = effectiveUnitPrice,
-                        DiscountAppliedSnapshot = product.Price - effectiveUnitPrice,
-                        Quantity = cartItem.Quantity,
-                        LineTotal = lineTotal
+                        OrderNumber = orderNumber,
+                        UserId = userId,
+                        IsGuestOrder = string.IsNullOrEmpty(userId),
+                        CustomerName = model.CustomerName,
+                        CustomerPhone = model.CustomerPhone,
+                        CustomerEmail = model.CustomerEmail,
+                        Division = model.Division,
+                        District = model.District,
+                        UpazilaThana = model.UpazilaThana,
+                        Area = model.Area,
+                        StreetAddress = model.StreetAddress,
+                        Landmark = model.Landmark,
+                        DeliveryNotes = model.DeliveryNotes,
+                        RequestedDeliveryDate = model.RequestedDeliveryDate,
+                        DeliveryZone = model.DeliveryZone,
+                        SubTotal = recomputedSubTotal,
+                        CouponDiscountAmount = couponDiscount,
+                        AppliedCouponCode = model.AppliedCouponCode,
+                        DeliveryFee = deliveryFee,
+                        TotalAmount = totalPayable,
+                        Status = OrderStatus.Pending,
+                        PaymentStatus = model.PaymentMethod == PaymentMethod.CashOnDelivery ? PaymentStatus.Unpaid : PaymentStatus.Pending,
+                        PaymentMethod = model.PaymentMethod,
+                        CreatedAtUtc = DateTime.UtcNow,
+                        Items = orderItems
+                    };
+
+                    order.StatusHistory.Add(new OrderStatusHistory
+                    {
+                        Status = OrderStatus.Pending,
+                        ChangedBy = "Customer Checkout",
+                        Note = $"Order placed with {model.PaymentMethod}. Payable: ৳{totalPayable:N0}",
+                        ChangedAtUtc = DateTime.UtcNow
                     });
-                }
 
-                // Coupon evaluation
-                decimal couponDiscount = 0.00m;
-                int? appliedCouponId = null;
-                if (!string.IsNullOrWhiteSpace(model.AppliedCouponCode))
-                {
-                    var customerId = userId ?? model.CustomerPhone;
-                    var couponResult = await _promotionService.ValidateCouponAsync(model.AppliedCouponCode, recomputedSubTotal, customerId);
-                    if (couponResult.IsValid && couponResult.Coupon != null)
+                    await _context.Orders.AddAsync(order);
+                    await _context.SaveChangesAsync();
+
+                    // If coupon was applied, record usage
+                    if (appliedCouponId.HasValue && couponDiscount > 0)
                     {
-                        couponDiscount = couponResult.DiscountAmount;
-                        appliedCouponId = couponResult.Coupon.Id;
+                        await _promotionService.RecordCouponUsageAsync(
+                            appliedCouponId.Value, 
+                            userId ?? model.CustomerPhone, 
+                            order.Id, 
+                            couponDiscount);
                     }
-                }
 
-                // Delivery Zone validation & fee calculation: Delivery is strictly inside Dhaka only
-                if (!string.Equals(model.Division, "Dhaka", StringComparison.OrdinalIgnoreCase) || 
-                    model.DeliveryZone == "Outside Dhaka")
+                    await transaction.CommitAsync();
+
+                    // Clear customer's shopping cart after successful order
+                    await _cartService.ClearCartAsync();
+
+                    return new OrderPlacementResult
+                    {
+                        Success = true,
+                        Order = order,
+                        Message = "Your order has been placed successfully!"
+                    };
+                }
+                catch (Exception ex)
                 {
                     await transaction.RollbackAsync();
                     return new OrderPlacementResult
                     {
                         Success = false,
-                        Message = "We currently deliver only inside Dhaka. Please select a delivery address inside Dhaka."
+                        Message = $"An error occurred while placing your order: {ex.Message}"
                     };
                 }
-
-                model.DeliveryZone = "Inside Dhaka";
-                decimal deliveryFee = 0.00m;
-                if (recomputedSubTotal < 2500.00m) // Free delivery threshold
-                {
-                    deliveryFee = 70.00m;
-                }
-
-                decimal totalPayable = Math.Max(0, recomputedSubTotal - couponDiscount + deliveryFee);
-
-                // Generate Unique Order Reference
-                var randomPart = new Random().Next(1000, 9999);
-                var orderNumber = $"AAR-{DateTime.UtcNow:yyyyMMdd}-{randomPart}";
-
-                var order = new Order
-                {
-                    OrderNumber = orderNumber,
-                    UserId = userId,
-                    IsGuestOrder = string.IsNullOrEmpty(userId),
-                    CustomerName = model.CustomerName,
-                    CustomerPhone = model.CustomerPhone,
-                    CustomerEmail = model.CustomerEmail,
-                    Division = model.Division,
-                    District = model.District,
-                    UpazilaThana = model.UpazilaThana,
-                    Area = model.Area,
-                    StreetAddress = model.StreetAddress,
-                    Landmark = model.Landmark,
-                    DeliveryNotes = model.DeliveryNotes,
-                    RequestedDeliveryDate = model.RequestedDeliveryDate,
-                    DeliveryZone = model.DeliveryZone,
-                    SubTotal = recomputedSubTotal,
-                    CouponDiscountAmount = couponDiscount,
-                    AppliedCouponCode = model.AppliedCouponCode,
-                    DeliveryFee = deliveryFee,
-                    TotalAmount = totalPayable,
-                    Status = OrderStatus.Pending,
-                    PaymentStatus = model.PaymentMethod == PaymentMethod.CashOnDelivery ? PaymentStatus.Unpaid : PaymentStatus.Pending,
-                    PaymentMethod = model.PaymentMethod,
-                    CreatedAtUtc = DateTime.UtcNow,
-                    Items = orderItems
-                };
-
-                order.StatusHistory.Add(new OrderStatusHistory
-                {
-                    Status = OrderStatus.Pending,
-                    ChangedBy = "Customer Checkout",
-                    Note = $"Order placed with {model.PaymentMethod}. Payable: ৳{totalPayable:N0}",
-                    ChangedAtUtc = DateTime.UtcNow
-                });
-
-                await _context.Orders.AddAsync(order);
-                await _context.SaveChangesAsync();
-
-                // If coupon was applied, record usage
-                if (appliedCouponId.HasValue && couponDiscount > 0)
-                {
-                    await _promotionService.RecordCouponUsageAsync(
-                        appliedCouponId.Value, 
-                        userId ?? model.CustomerPhone, 
-                        order.Id, 
-                        couponDiscount);
-                }
-
-                await transaction.CommitAsync();
-
-                // Clear customer's shopping cart after successful order
-                await _cartService.ClearCartAsync();
-
-                return new OrderPlacementResult
-                {
-                    Success = true,
-                    Order = order,
-                    Message = "Your order has been placed successfully!"
-                };
-            }
-            catch (Exception ex)
-            {
-                await transaction.RollbackAsync();
-                return new OrderPlacementResult
-                {
-                    Success = false,
-                    Message = $"An error occurred while placing your order: {ex.Message}"
-                };
-            }
+            });
         }
 
         public async Task<Order?> GetOrderByNumberAsync(string orderNumber)
